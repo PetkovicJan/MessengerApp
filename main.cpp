@@ -50,5 +50,19 @@ int main(int argc, char* argv[])
     return 1;
   }
 
+  if (connect(socket_handle, address_info->ai_addr, address_info->ai_addrlen) == SOCKET_ERROR)
+  {
+    closesocket(socket_handle);
+    socket_handle = INVALID_SOCKET;
+  }
+
+  freeaddrinfo(address_info);
+
+  if (socket_handle == INVALID_SOCKET)
+  {
+    std::cout << "Unable to connect to server.\n";
+    return 1;
+  }
+
   return 0;
 }
