@@ -3,14 +3,25 @@
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 
+class SocketContext
+{
+public:
+  explicit SocketContext()
+  {
+    WSADATA wsa_data;
+    if (WSAStartup(MAKEWORD(2, 2), &wsa_data) != 0)
+      throw std::runtime_error("Startup failed.");
+  }
+
+  ~SocketContext()
+  {
+    WSACleanup();
+  }
+};
+
 int main(int argc, char* argv[])
 {
-  WSADATA wsa_data;
-  if (WSAStartup(MAKEWORD(2, 2), &wsa_data) != 0)
-  {
-    std::cout << "Startup failed.\n";
-    return 1;
-  }
+  SocketContext socket_context;
 
   auto const ip_str = "TODO";
   auto const port_num_str = "TODO";
@@ -25,7 +36,6 @@ int main(int argc, char* argv[])
   if (getaddrinfo(ip_str, port_num_str, &host_info, &address_info) != 0)
   {
     std::cout << "Get address info failed.\n";
-    WSACleanup();
     return 1;
   }
 
@@ -34,13 +44,6 @@ int main(int argc, char* argv[])
   {
     std::cout << "Creating socket failed.\n";
     freeaddrinfo(address_info);
-    WSACleanup();
-    return 1;
-  }
-
-  if (WSACleanup() != 0)
-  {
-    std::cout << "Cleanup failed.\n";
     return 1;
   }
 
