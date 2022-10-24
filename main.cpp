@@ -23,8 +23,11 @@ int main(int argc, char* argv[])
 {
   SocketContext socket_context;
 
-  auto const ip_str = "TODO";
-  auto const port_num_str = "TODO";
+  // This machine's IP.
+  auto const ip_str = "192.168.8.1";
+
+  // Port number from MS documentation.
+  auto const port_num_str = "27015";
 
   addrinfo host_info;
   ZeroMemory(&host_info, sizeof(host_info));
