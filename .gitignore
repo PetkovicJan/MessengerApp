@@ -1,5 +1,8 @@
+# Ignore everything
 *
-*/
+
+# Except 
+!*/
 !.gitignore
 !*.cpp
 !*.hpp
