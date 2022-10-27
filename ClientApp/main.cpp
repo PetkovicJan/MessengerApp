@@ -1,4 +1,4 @@
-#include "Socket.h"
+#include "../Socket.h"
 
 #include <iostream>
 
@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
 
   // Port number from MS documentation.
   auto const port_num_str = "27015";
-  Address server_address(ip_str, port_num_str);
+  Address server_address(SocketType::Client, ip_str, port_num_str);
 
   ConnectedSocket socket(server_address);
 
