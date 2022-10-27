@@ -14,15 +14,17 @@ SocketContext::~SocketContext()
   WSACleanup();
 }
 
-Address::Address(std::string const& ip_str, std::string const& port_str)
+Address::Address(SocketType type, std::string const& ip_str, std::string const& port_str)
 {
   addrinfo host_info;
   ZeroMemory(&host_info, sizeof(host_info));
   host_info.ai_family = AF_UNSPEC;
   host_info.ai_socktype = SOCK_STREAM;
   host_info.ai_protocol = IPPROTO_TCP;
+  if (type == SocketType::Server)
+    host_info.ai_flags = AI_PASSIVE;
 
-  if (getaddrinfo(ip_str.c_str(), port_str.c_str(), &host_info, &address_info_) != 0)
+  if (getaddrinfo(NULL, port_str.c_str(), &host_info, &address_info_) != 0)
   {
     throw std::runtime_error("Get address info failed.");
   }
@@ -51,11 +53,16 @@ int Address::protocol() const
 
 BareSocket::BareSocket(int family, int socket_type, int protocol)
 {
-  SOCKET socket_ = socket(family, socket_type, protocol);
+  socket_ = socket(family, socket_type, protocol);
   if (socket_ == INVALID_SOCKET)
   {
     throw std::runtime_error("Creating socket failed.");
   }
+}
+
+BareSocket::BareSocket(SOCKET socket)
+{
+  socket_ = socket;
 }
 
 BareSocket::~BareSocket()
@@ -64,6 +71,12 @@ BareSocket::~BareSocket()
     closesocket(socket_);
 
   socket_ = INVALID_SOCKET;
+}
+
+BareSocket::BareSocket(BareSocket&& other) noexcept
+{
+  socket_ = other.socket_;
+  other.socket_ = INVALID_SOCKET;
 }
 
 SOCKET BareSocket::handle() const
@@ -86,12 +99,22 @@ ConnectedSocket::ConnectedSocket(Address const& address) :
   }
 }
 
+ConnectedSocket::ConnectedSocket(SOCKET connected_socket) : 
+  socket_(connected_socket)
+{
+}
+
+ConnectedSocket::ConnectedSocket(ConnectedSocket&& other) noexcept : 
+  socket_(std::move(other.socket_)) 
+{
+}
+
 ConnectedSocket::~ConnectedSocket()
 {
   shutdown(socket_.handle(), SD_SEND);
 }
 
-void ConnectedSocket::send(std::vector<char> const& data)
+void ConnectedSocket::send(std::vector<char> const& data) const
 {
   const int num_bytes = data.size();
   const int result = ::send(socket_.handle(), data.data(), num_bytes, 0);
@@ -99,7 +122,7 @@ void ConnectedSocket::send(std::vector<char> const& data)
     throw std::runtime_error("Send failed.");
 }
 
-std::vector<char> ConnectedSocket::receive()
+std::vector<char> ConnectedSocket::receive() const
 {
   const int buff_size = 512;
   std::vector<char> buffer(buff_size);
