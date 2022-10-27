@@ -137,3 +137,38 @@ std::vector<char> ConnectedSocket::receive() const
     return buffer;
   }
 }
+
+ListeningSocket::ListeningSocket(Address const& address, int max_connections) : 
+  socket_(address.family(), address.socket_type(), address.protocol())
+{
+  auto const& ai = address.address_info_;
+  if (bind(socket_.handle(), ai->ai_addr, ai->ai_addrlen) == SOCKET_ERROR)
+  {
+    throw std::runtime_error("Binding to address failed.");
+  }
+
+  if (listen(socket_.handle(), max_connections) == SOCKET_ERROR)
+  {
+    throw std::runtime_error("Listening failed.");
+  }
+}
+
+ListeningSocket::~ListeningSocket()
+{
+}
+
+ListeningSocket::ListeningSocket(ListeningSocket&& other) noexcept : 
+  socket_(std::move(other.socket_))
+{
+}
+
+ConnectedSocket ListeningSocket::accept()
+{
+  SOCKET client_socket = ::accept(socket_.handle(), NULL, NULL);
+  if (client_socket == INVALID_SOCKET)
+  {
+    throw std::runtime_error("Accepting a client socket failed.");
+  }
+
+  return std::move(ConnectedSocket(client_socket));
+}

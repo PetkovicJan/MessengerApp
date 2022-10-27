@@ -33,6 +33,7 @@ private:
   addrinfo* address_info_ = nullptr;
 
   friend class ConnectedSocket;
+  friend class ListeningSocket;
 };
 
 class BareSocket
@@ -76,7 +77,16 @@ private:
   BareSocket socket_;
 };
 
-  std::vector<char> receive();
+class ListeningSocket
+{
+public:
+  explicit ListeningSocket(Address const& address, int max_connections);
+
+  ~ListeningSocket();
+
+  ListeningSocket(ListeningSocket&& other) noexcept;
+
+  ConnectedSocket accept();
 
 private:
   BareSocket socket_;
