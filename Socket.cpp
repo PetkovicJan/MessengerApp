@@ -136,6 +136,8 @@ std::vector<char> ConnectedSocket::receive() const
 
     return buffer;
   }
+  else
+    return std::vector<char>();
 }
 
 ListeningSocket::ListeningSocket(Address const& address, int max_connections) : 
