@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
   SocketContext context;
 
   // This machine's IP.
-  auto const ip_str = "192.168.8.1";
+  auto const ip_str = "127.0.0.1";
 
   // Port number from MS documentation.
   auto const port_num_str = "27015";
