@@ -114,7 +114,7 @@ ConnectedSocket::~ConnectedSocket()
   shutdown(socket_.handle(), SD_SEND);
 }
 
-void ConnectedSocket::send(std::vector<char> const& data) const
+void ConnectedSocket::send(std::string const& data) const
 {
   const int num_bytes = data.size();
   const int result = ::send(socket_.handle(), data.data(), num_bytes, 0);
@@ -122,13 +122,13 @@ void ConnectedSocket::send(std::vector<char> const& data) const
     throw std::runtime_error("Send failed.");
 }
 
-std::vector<char> ConnectedSocket::receive() const
+std::string ConnectedSocket::receive() const
 {
   const int buff_size = 512;
-  std::vector<char> buffer(buff_size);
+  std::string buffer('x', buff_size);
   const int num_bytes = buffer.size();
 
-  int result = recv(socket_.handle(), buffer.data(), num_bytes, 0);
+  int result = recv(socket_.handle(), &buffer.front(), num_bytes, 0);
   if (result > 0)
   {
     const int num_received = result;
@@ -137,7 +137,7 @@ std::vector<char> ConnectedSocket::receive() const
     return buffer;
   }
   else
-    return std::vector<char>();
+    return std::string();
 }
 
 ListeningSocket::ListeningSocket(Address const& address, int max_connections) : 

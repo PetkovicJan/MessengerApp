@@ -4,7 +4,6 @@
 #include <WS2tcpip.h>
 
 #include <string>
-#include <vector>
 
 enum class SocketType { Server, Client };
 
@@ -69,9 +68,9 @@ public:
 
   ~ConnectedSocket();
 
-  void send(std::vector<char> const& data) const;
+  void send(std::string const& data) const;
 
-  std::vector<char> receive() const;
+  std::string receive() const;
 
 private:
   BareSocket socket_;

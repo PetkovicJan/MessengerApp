@@ -37,24 +37,16 @@ void MessengerApp::start()
     receiver_.join();
 }
 
-std::vector<char> MessengerApp::queryMessage()
+std::string MessengerApp::queryMessage()
 {
   std::string msg;
   std::cin >> msg;
 
-  std::vector<char> result;
-  for (int i = 0; i < msg.size(); ++i)
-    result.push_back(msg[i]);
-
-  return result;
+  return msg;
 }
 
-void MessengerApp::displayMessage(std::vector<char> const& msg)
+void MessengerApp::displayMessage(std::string const& msg)
 {
-  std::string msg_str;
-  for (auto ch : msg)
-    msg_str.push_back(ch);
-
   std::lock_guard<std::mutex> lock(output_mtx_);
-  std::cout << msg_str << '\n';
+  std::cout << msg << '\n';
 }

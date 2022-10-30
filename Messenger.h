@@ -14,9 +14,9 @@ public:
   void start();
 
 private:
-  std::vector<char> queryMessage();
+  std::string queryMessage();
 
-  void displayMessage(std::vector<char> const& msg);
+  void displayMessage(std::string const& msg);
 
   ConnectedSocket& socket_;
 
