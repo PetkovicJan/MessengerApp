@@ -2,6 +2,7 @@
 
 #include "Socket.h"
 #include "ThreadSafeQueue.h"
+#include "Connection.h"
 
 #include <vector>
 #include <thread>
@@ -24,6 +25,8 @@ protected:
 private:
   void acceptingService();
 
+  std::unique_ptr<Connection> acceptConnection();
+
   SocketContext context;
 
   std::atomic<bool> server_running_ = false;
@@ -31,7 +34,7 @@ private:
   ListeningSocket listening_socket_;
   std::thread accepting_thread_;
 
-  std::vector<ConnectedSocket> clients_;
+  std::vector<std::unique_ptr<Connection>> clients_;
   const int max_clients_ = 0;
   std::mutex clients_mutex_;
 
