@@ -1,4 +1,5 @@
 #include "../Socket.h"
+#include "../Server.h"
 #include "../Messenger.h"
 
 #include <iostream>
@@ -6,23 +7,14 @@
 
 int main(int argc, char* argv[])
 {
-  SocketContext context;
-
   // This machine's IP.
   auto const ip_str = "127.0.0.1";
 
   // Port number from MS documentation.
   auto const port_num_str = "27015";
 
-  Address local_address(SocketType::Server, ip_str, port_num_str);
-
-  ListeningSocket listening_socket(local_address, 2);
-
-  auto client_socket = listening_socket.accept();
-  std::cout << "Client accepted\n";
-
-  MessengerApp messenger_app(client_socket);
-  messenger_app.start();
+  Server server(ip_str, port_num_str, 5);
+  server.exec();
 
   return 0;
 }
