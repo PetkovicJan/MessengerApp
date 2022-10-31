@@ -35,5 +35,5 @@ private:
   const int max_clients_ = 0;
   std::mutex clients_mutex_;
 
-  ThreadSafeQueue<std::string> message_queue_;
+  MessageQueue message_queue_;
 };

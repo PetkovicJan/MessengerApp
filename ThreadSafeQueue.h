@@ -48,3 +48,5 @@ T ThreadSafeQueue<T>::pop()
 
   return front;
 }
+
+using MessageQueue = ThreadSafeQueue<std::string>;
