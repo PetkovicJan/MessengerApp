@@ -27,17 +27,29 @@ void Server::exec()
     while (!message_queue_.empty())
     {
       auto msg = message_queue_.pop();
-      onMessageReceived(msg);
+      onClientMessageReceived(msg);
     }
   }
 }
 
-void Server::stop()
+void Server::stopServer()
 {
   server_running_.store(false);
 }
 
-void Server::onMessageReceived(std::string const& msg)
+void Server::sendMessageToClient(int client_id, std::string msg)
+{
+}
+
+void Server::onClientConnected(int client_id)
+{
+}
+
+void Server::onClientDisconnected(int client_id)
+{
+}
+
+void Server::onClientMessageReceived(std::string const& msg)
 {
   std::cout << msg << std::endl;
 }

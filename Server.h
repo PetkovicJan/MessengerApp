@@ -18,11 +18,16 @@ public:
   void exec();
 
 protected:
-  void stop();
-
-  virtual void onMessageReceived(std::string const& msg);
+  // Utility functions, that should be used by the derived classes.
+  void stopServer();
+  void sendMessageToClient(int client_id, std::string msg);
 
 private:
+  // Virtual functions, that should be overridden by derived classes.
+  virtual void onClientConnected(int client_id);
+  virtual void onClientDisconnected(int client_id);
+  virtual void onClientMessageReceived(std::string const& msg);
+
   void acceptingService();
 
   std::unique_ptr<Connection> acceptConnection();
