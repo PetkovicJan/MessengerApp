@@ -8,11 +8,13 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
+#include <optional>
 
 class Server
 {
 public:
-  explicit Server(std::string const& ip_str, std::string const& port_str, int max_num_clients);
+  explicit Server(
+    std::string const& ip_str, std::string const& port_str, int max_num_clients);
   virtual ~Server();
 
   void exec();
@@ -21,12 +23,14 @@ protected:
   // Utility functions, that should be used by the derived classes.
   void stopServer();
   void sendMessageToClient(int client_id, std::string msg);
+  void sendMessageToAllClients(
+    std::string msg, std::optional<int> ignore_client_id = std::nullopt);
 
 private:
   // Virtual functions, that should be overridden by derived classes.
   virtual void onClientConnected(int client_id);
   virtual void onClientDisconnected(int client_id);
-  virtual void onClientMessageReceived(std::string const& msg);
+  virtual void onClientMessageReceived(int client_id, std::string const& msg);
 
   void handleMessage(Message const& msg);
 

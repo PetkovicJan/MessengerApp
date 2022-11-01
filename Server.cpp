@@ -39,6 +39,30 @@ void Server::stopServer()
 
 void Server::sendMessageToClient(int client_id, std::string msg)
 {
+  std::lock_guard<std::mutex> lg(clients_mutex_);
+
+  auto const& v = clients_;
+  auto const client_it = std::find_if(
+    v.cbegin(), v.cend(), [client_id](auto const& client_ptr)
+    {
+      return client_ptr->id() == client_id;
+    });
+
+  if (client_it != v.cend())
+    (*client_it)->send(msg);
+}
+
+void Server::sendMessageToAllClients(
+  std::string msg, std::optional<int> ignore_client_id)
+{
+  std::lock_guard<std::mutex> lg(clients_mutex_);
+  for (auto const& client : clients_)
+  {
+    if (ignore_client_id && *ignore_client_id == client->id()) 
+      continue;
+
+    client->send(msg);
+  }
 }
 
 void Server::onClientConnected(int client_id)
