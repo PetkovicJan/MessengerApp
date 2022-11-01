@@ -19,6 +19,9 @@ bool Connection::isAlive() const
   return is_alive_.load();
 }
 
+// Note that sending and receiving from the same socket is thread safe. 
+// What is not thread-safe is calling send from multiple threads (and the 
+// same for receive).
 void Connection::send(std::string const& msg)
 {
   socket_.send(msg);
