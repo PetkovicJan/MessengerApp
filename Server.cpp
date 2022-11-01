@@ -69,5 +69,6 @@ std::unique_ptr<Connection> Server::acceptConnection()
 {
   auto client_socket = listening_socket_.accept();
 
-  return std::make_unique<Connection>(std::move(client_socket), message_queue_);
+  return std::make_unique<Connection>(
+    id_counter_++, std::move(client_socket), message_queue_);
 }

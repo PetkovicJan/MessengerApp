@@ -9,7 +9,7 @@
 class Connection
 {
 public:
-  Connection(ConnectedSocket&& socket, MessageQueue& message_queue);
+  Connection(int unique_id, ConnectedSocket&& socket, MessageQueue& message_queue);
   ~Connection();
 
   bool isAlive() const;
@@ -19,6 +19,7 @@ public:
 private:
   void receivingService();
 
+  const int unique_id_ = 0;
   ConnectedSocket socket_;
 
   MessageQueue& message_queue_;

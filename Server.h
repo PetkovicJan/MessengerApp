@@ -33,6 +33,7 @@ private:
 
   ListeningSocket listening_socket_;
   std::thread accepting_thread_;
+  int id_counter_ = 0;
 
   // (Unique) pointer is mostly used to avoid moving non-copyable Connection 
   // instances. They contain a running thread, which makes moving impossible.

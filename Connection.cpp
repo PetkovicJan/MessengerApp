@@ -1,7 +1,8 @@
 #include "Connection.h"
 
-Connection::Connection(ConnectedSocket&& socket, MessageQueue& message_queue) : 
-  socket_(std::move(socket)), message_queue_(message_queue)
+Connection::Connection(
+  int unique_id, ConnectedSocket&& socket, MessageQueue& message_queue) : 
+  unique_id_(unique_id), socket_(std::move(socket)), message_queue_(message_queue)
 {
   is_alive_.store(true);
   recv_thread_ = std::move(std::thread(&Connection::receivingService, this));
@@ -33,10 +34,10 @@ void Connection::receivingService()
   {
     auto const msg = socket_.receive();
     if (msg.size() > 0)
-      message_queue_.push(msg);
+      message_queue_.push(std::to_string(unique_id_) + msg);
     else
     {
-      message_queue_.push("Client disconnected.");
+      message_queue_.push(std::to_string(unique_id_) + "Client disconnected.");
       is_alive_.store(false);
     }
   }
