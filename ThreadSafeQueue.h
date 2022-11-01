@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Message.h"
+
 #include <queue>
 #include <mutex>
 
@@ -49,4 +51,4 @@ T ThreadSafeQueue<T>::pop()
   return front;
 }
 
-using MessageQueue = ThreadSafeQueue<std::string>;
+using MessageQueue = ThreadSafeQueue<Message>;

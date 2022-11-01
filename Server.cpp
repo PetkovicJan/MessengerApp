@@ -27,7 +27,7 @@ void Server::exec()
     while (!message_queue_.empty())
     {
       auto msg = message_queue_.pop();
-      onClientMessageReceived(msg);
+      handleMessage(msg);
     }
   }
 }
@@ -49,9 +49,20 @@ void Server::onClientDisconnected(int client_id)
 {
 }
 
-void Server::onClientMessageReceived(std::string const& msg)
+void Server::onClientMessageReceived(int client_id, std::string const& msg)
 {
-  std::cout << msg << std::endl;
+  std::cout << "Client " << client_id << ": " << msg << std::endl;
+}
+
+void Server::handleMessage(Message const& msg)
+{
+  auto const msg_t = msg.type;
+  if (msg_t == MessageType::ClientMessage)
+    onClientMessageReceived(msg.client_id, msg.msg);
+  else if (msg_t == MessageType::ClientConnected)
+    onClientConnected(msg.client_id);
+  else if (msg_t == MessageType::ClientDisconnected)
+    onClientDisconnected(msg.client_id);
 }
 
 void Server::acceptingService()
@@ -65,9 +76,11 @@ void Server::acceptingService()
       const int num_clients = clients_.size();
       if (num_clients < max_clients_)
       {
+        const int client_id = client_connection->id();
         client_connection->send("Connection with server succeeded.");
+
         clients_.push_back(std::move(client_connection));
-        message_queue_.push("New client connected.");
+        message_queue_.push(Message{ MessageType::ClientConnected, client_id, ""});
       }
       else
       {

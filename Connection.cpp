@@ -15,6 +15,11 @@ Connection::~Connection()
     recv_thread_.join();
 }
 
+int Connection::id() const
+{
+  return unique_id_;
+}
+
 bool Connection::isAlive() const
 {
   return is_alive_.load();
@@ -34,10 +39,10 @@ void Connection::receivingService()
   {
     auto const msg = socket_.receive();
     if (msg.size() > 0)
-      message_queue_.push(std::to_string(unique_id_) + msg);
+      message_queue_.push(Message{ MessageType::ClientMessage, unique_id_, msg });
     else
     {
-      message_queue_.push(std::to_string(unique_id_) + "Client disconnected.");
+      message_queue_.push(Message{ MessageType::ClientDisconnected, unique_id_, "" });
       is_alive_.store(false);
     }
   }

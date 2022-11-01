@@ -28,6 +28,8 @@ private:
   virtual void onClientDisconnected(int client_id);
   virtual void onClientMessageReceived(std::string const& msg);
 
+  void handleMessage(Message const& msg);
+
   void acceptingService();
 
   std::unique_ptr<Connection> acceptConnection();

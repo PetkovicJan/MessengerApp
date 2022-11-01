@@ -12,6 +12,8 @@ public:
   Connection(int unique_id, ConnectedSocket&& socket, MessageQueue& message_queue);
   ~Connection();
 
+  int id() const;
+
   bool isAlive() const;
 
   void send(std::string const& msg);
