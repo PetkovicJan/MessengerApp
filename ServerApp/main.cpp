@@ -1,9 +1,5 @@
-#include "../Socket.h"
 #include "../Server.h"
 #include "../Messenger.h"
-
-#include <iostream>
-#include <thread>
 
 int main(int argc, char* argv[])
 {
