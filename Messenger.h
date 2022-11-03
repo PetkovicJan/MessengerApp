@@ -25,4 +25,30 @@ private:
   std::thread receiver_;
 
   std::mutex output_mtx_;
+};};
+
+enum class AppMessageType { UserSentMessage, UserLoggedIn, UserLoggedOut };
+
+class AppMessage
+{
+public:
+  explicit AppMessage(
+    AppMessageType type, 
+    std::optional<std::string> const& opt_data = std::nullopt);
+
+  AppMessageType type() const;
+
+  std::string data() const;
+
+private:
+  struct MessageHeader
+  {
+    AppMessageType type;
+    int size;
+  } header_;
+
+  std::string data_;
+
+  friend std::string serialize(AppMessage const&);
+  friend AppMessage deserialize(std::string const&);
 };
