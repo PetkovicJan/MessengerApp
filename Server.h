@@ -38,7 +38,7 @@ private:
 
   std::unique_ptr<Connection> acceptConnection();
 
-  SocketContext context;
+  SocketContext context_;
 
   std::atomic<bool> server_running_ = false;
 

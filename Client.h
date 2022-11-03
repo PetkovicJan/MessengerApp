@@ -2,6 +2,9 @@
 
 #include "Socket.h"
 
+#include <atomic>
+#include <memory>
+
 class Client
 {
 public:
@@ -20,6 +23,8 @@ private:
   // Virtual functions, that should be overridden by derived classes.
   virtual void onServerMessageReceived(std::string const& msg);
   virtual void onDisconnectedFromServer();
+
+  SocketContext context_;
 
   std::atomic<bool> is_alive_ = true;
   std::unique_ptr<ConnectedSocket> server_;
