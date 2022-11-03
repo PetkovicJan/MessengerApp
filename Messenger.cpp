@@ -126,3 +126,60 @@ AppMessage& operator >> (AppMessage& msg, std::string& take_data)
 
   return msg;
 }
+
+bool are_same(AppMessage const& one, AppMessage const& other)
+{
+  return (one.type() == other.type()) && (one.data() == other.data());
+}
+
+void test_case(std::string const& test_name, AppMessage const& msg)
+{
+  auto const serialized = serialize(msg);
+  auto const deserialized = deserialize(serialized);
+  const bool same = are_same(msg, deserialized);
+  std::cout << test_name << ": " << (same ? "Success" : "Failure") << std::endl;
+}
+
+void test_message_serialization()
+{
+  {
+    AppMessage msg(AppMessageType::UserLoggedIn);
+    test_case("Case 1", msg);
+  }
+
+  {
+    AppMessage msg(AppMessageType::UserLoggedOut);
+    test_case("Case 2", msg);
+  }
+
+  {
+    auto const data = std::to_string(1);
+    AppMessage msg(AppMessageType::UserLoggedIn, data);
+    test_case("Case 3", msg);
+  }
+
+  {
+    auto const data = "User message.";
+    AppMessage msg(AppMessageType::UserSentMessage, data);
+    test_case("Case 4", msg);
+  }
+}
+
+void test_message_streaming()
+{
+  AppMessage msg(AppMessageType::UserLoggedIn);
+  int a = 4;
+  bool b = true;
+  float c = 7.f;
+  std::string s = "Foo";
+  msg << a << b << c << s;
+  
+  int a1;
+  bool b1;
+  float c1;
+  std::string s1;
+  msg >> a1 >> b1 >> c1 >> s1;
+
+  const bool same = a == a1 && b == b1 && c == c1 && s == s1;
+  std::cout << "Streaming test" << ": " << (same ? "Success" : "Failure") << std::endl;
+}

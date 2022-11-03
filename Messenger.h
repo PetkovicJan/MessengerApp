@@ -100,3 +100,6 @@ template<>
 AppMessage& operator << (AppMessage& msg, std::string const& put_data);
 template<>
 AppMessage& operator >> (AppMessage& msg, std::string& take_data);
+
+void test_message_serialization();
+void test_message_streaming();
