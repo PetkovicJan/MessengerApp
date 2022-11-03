@@ -110,3 +110,19 @@ AppMessage deserialize(std::string const& str)
 
   return AppMessage(header.type, data);
 }
+
+template<>
+AppMessage& operator << (AppMessage& msg, std::string const& put_data)
+{
+  msg.data_.append(put_data);
+
+  return msg;
+}
+
+template<>
+AppMessage& operator >> (AppMessage& msg, std::string& take_data)
+{
+  take_data = std::move(msg.data_);
+
+  return msg;
+}
