@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Socket.h"
+#include "Server.h"
 
 #include <thread>
 #include <mutex>
@@ -25,7 +26,7 @@ private:
   std::thread receiver_;
 
   std::mutex output_mtx_;
-};};
+};
 
 enum class AppMessageType { UserSentMessage, UserLoggedIn, UserLoggedOut };
 
@@ -103,3 +104,15 @@ AppMessage& operator >> (AppMessage& msg, std::string& take_data);
 
 void test_message_serialization();
 void test_message_streaming();
+
+class MessengerServer : public Server
+{
+public:
+  explicit MessengerServer(
+    std::string const& ip_str, std::string const& port_str, int max_num_clients);
+
+private:
+  void onClientConnected(int client_id) override;
+  void onClientDisconnected(int client_id) override;
+  void onClientMessageReceived(int client_id, std::string const& msg) override;
+};

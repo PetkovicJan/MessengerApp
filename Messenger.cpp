@@ -127,6 +127,44 @@ AppMessage& operator >> (AppMessage& msg, std::string& take_data)
   return msg;
 }
 
+MessengerServer::MessengerServer(
+  std::string const& ip_str, std::string const& port_str, int max_num_clients) :
+  Server(ip_str, port_str, max_num_clients)
+{}
+
+void MessengerServer::onClientConnected(int client_id)
+{
+  AppMessage msg(AppMessageType::UserLoggedIn, std::to_string(client_id));
+  sendMessageToAllClients(serialize(msg), client_id);
+}
+
+void MessengerServer::onClientDisconnected(int client_id)
+{
+  AppMessage msg(AppMessageType::UserLoggedOut, std::to_string(client_id));
+  sendMessageToAllClients(serialize(msg), client_id);
+}
+
+void MessengerServer::onClientMessageReceived(
+  int client_id, std::string const& msg_str)
+{
+  auto app_msg = deserialize(msg_str);
+  if (app_msg.type() == AppMessageType::UserSentMessage)
+  {
+    // Obtain the receiving client ID and message.
+    int client_to;
+    std::string msg;
+    app_msg >> client_to >> msg;
+
+    // Create a new message with the sender client ID and message.
+    const int client_from = client_id;
+    AppMessage new_msg(AppMessageType::UserSentMessage);
+    new_msg << client_from << msg;
+
+    // Send new message to the receiving client.
+    sendMessageToClient(client_to, serialize(new_msg));
+  }
+}
+
 bool are_same(AppMessage const& one, AppMessage const& other)
 {
   return (one.type() == other.type()) && (one.data() == other.data());
