@@ -67,10 +67,12 @@ void Server::sendMessageToAllClients(
 
 void Server::onClientConnected(int client_id)
 {
+  std::cout << "Client " << client_id << " connected." << std::endl;
 }
 
 void Server::onClientDisconnected(int client_id)
 {
+  std::cout << "Client " << client_id << " disconnected." << std::endl;
 }
 
 void Server::onClientMessageReceived(int client_id, std::string const& msg)
