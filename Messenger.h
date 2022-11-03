@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Socket.h"
 #include "Server.h"
+#include "Client.h"
 
 #include <thread>
 #include <mutex>
@@ -77,9 +77,9 @@ AppMessage& operator >> (AppMessage& msg, DataT& take_data)
 // a string from message, we choose to simply take the whole string, since 
 // we don't know how long it should be.
 template<>
-AppMessage& operator << (AppMessage& msg, std::string const& put_data);
+AppMessage& operator<<(AppMessage& msg, std::string const& put_data);
 template<>
-AppMessage& operator >> (AppMessage& msg, std::string& take_data);
+AppMessage& operator>>(AppMessage& msg, std::string& take_data);
 
 void test_message_serialization();
 void test_message_streaming();
@@ -94,4 +94,19 @@ private:
   void onClientConnected(int client_id) override;
   void onClientDisconnected(int client_id) override;
   void onClientMessageReceived(int client_id, std::string const& msg) override;
+};
+
+class MessengerClient : public Client
+{
+public:
+  explicit MessengerClient(
+    std::string const& ip_str, std::string const& port_str);
+
+private:
+  virtual void onServerMessageReceived(std::string const& msg) override;
+  virtual void onDisconnectedFromServer() override;
+
+  void onUserLoggedIn(int user_id);
+  void onUserLoggedOut(int user_id);
+  void onUserMessageReceived(int user_id, std::string const& msg);
 };

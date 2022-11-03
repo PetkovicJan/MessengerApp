@@ -116,6 +116,53 @@ void MessengerServer::onClientMessageReceived(
   }
 }
 
+MessengerClient::MessengerClient(
+  std::string const& ip_str, std::string const& port_str) :
+  Client(ip_str, port_str)
+{}
+
+void MessengerClient::onServerMessageReceived(std::string const& data)
+{
+  auto app_msg = deserialize(data);
+
+  auto const msg_t = app_msg.type();
+  if (msg_t == AppMessageType::UserLoggedIn)
+  {
+    int user_id;
+    app_msg >> user_id;
+    onUserLoggedIn(user_id);
+  }
+  else if (msg_t == AppMessageType::UserLoggedOut)
+  {
+    int user_id;
+    app_msg >> user_id;
+    onUserLoggedOut(user_id);
+  }
+  else if (msg_t == AppMessageType::UserSentMessage)
+  {
+    int user_id;
+    std::string user_msg;
+    app_msg >> user_id >> user_msg;
+    onUserMessageReceived(user_id, user_msg);
+  }
+}
+
+void MessengerClient::onDisconnectedFromServer()
+{
+}
+
+void MessengerClient::onUserLoggedIn(int user_id)
+{
+}
+
+void MessengerClient::onUserLoggedOut(int user_id)
+{
+}
+
+void MessengerClient::onUserMessageReceived(int user_id, std::string const& msg)
+{
+}
+
 bool are_same(AppMessage const& one, AppMessage const& other)
 {
   return (one.type() == other.type()) && (one.data() == other.data());
@@ -172,3 +219,4 @@ void test_message_streaming()
   const bool same = a == a1 && b == b1 && c == c1 && s == s1;
   std::cout << "Streaming test" << ": " << (same ? "Success" : "Failure") << std::endl;
 }
+
