@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
 
   QMainWindow main_window;
   main_window.setCentralWidget(main_widget);
-  main_window.move(50, 50);
+  main_window.move(200, 200);
   main_window.show();
 
   return a.exec();
