@@ -15,15 +15,15 @@ MessengerAppWidget::MessengerAppWidget(QWidget* parent) : QWidget(parent)
   text_input_area_ = new QTextEdit();
   text_input_area_->installEventFilter(this);
 
-  auto text_output_area = new QTextEdit();
-  text_output_area->setReadOnly(true);
+  text_output_area_ = new QTextEdit();
+  text_output_area_->setReadOnly(true);
 
   // Set layout.
   auto users_layout = new QVBoxLayout();
   users_layout->addWidget(users_list_view_);
 
   auto text_layout = new QVBoxLayout();
-  text_layout->addWidget(text_output_area, 2);
+  text_layout->addWidget(text_output_area_, 2);
   text_layout->addWidget(text_input_area_, 1);
 
   auto main_layout = new QHBoxLayout();
@@ -53,5 +53,12 @@ bool MessengerAppWidget::eventFilter(QObject* obj, QEvent* event)
 
 void MessengerAppWidget::onInputTextEnterPressed()
 {
-  std::cout << "Enter pressed in input text area." << std::endl;
+  auto const input_text = text_input_area_->toPlainText();
+  addTextToOutput(input_text);
+  text_input_area_->clear();
+}
+
+void MessengerAppWidget::addTextToOutput(QString const& text)
+{
+  text_output_area_->append(text);
 }
