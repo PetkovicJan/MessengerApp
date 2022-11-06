@@ -1,5 +1,7 @@
 #include "MessengerAppQt.h"
 
+#include "UsersModelQt.h"
+
 #include <QKeyEvent>
 #include <QLayout>
 
@@ -11,6 +13,8 @@ MessengerAppWidget::MessengerAppWidget(QWidget* parent) : QWidget(parent)
 
   // Create sub-widgets.
   users_list_view_ = new QListView();
+  auto users_model = new UsersModel(this);
+  users_list_view_->setModel(users_model);
 
   text_input_area_ = new QTextEdit();
   text_input_area_->installEventFilter(this);
