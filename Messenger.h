@@ -106,7 +106,7 @@ private:
   virtual void onServerMessageReceived(std::string const& msg) override;
   virtual void onDisconnectedFromServer() override;
 
-  void onUserLoggedIn(int user_id);
-  void onUserLoggedOut(int user_id);
-  void onUserMessageReceived(int user_id, std::string const& msg);
+  virtual void onUserLoggedIn(int user_id);
+  virtual void onUserLoggedOut(int user_id);
+  virtual void onUserMessageReceived(int user_id, std::string const& msg);
 };
