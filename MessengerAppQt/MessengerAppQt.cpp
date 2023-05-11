@@ -37,6 +37,23 @@ MessengerAppWidget::MessengerAppWidget(QWidget* parent) : QWidget(parent)
   this->setLayout(main_layout);
 }
 
+void MessengerAppWidget::addUser(int id, QString const& name)
+{
+  static_cast<UsersModel*>(users_list_view_->model())->addUser(id, name);
+}
+
+void MessengerAppWidget::removeUser(int id)
+{
+  static_cast<UsersModel*>(users_list_view_->model())->removeUser(id);
+}
+
+void MessengerAppWidget::setUserMessage(int id, QString const& message)
+{
+  const auto name = static_cast<UsersModel*>(users_list_view_->model())->getUserName(id);
+  auto const text = name + QString(": ") + message;
+  text_output_area_->append(text);
+}
+
 bool MessengerAppWidget::eventFilter(QObject* obj, QEvent* event)
 {
   if (obj != text_input_area_)
@@ -48,21 +65,21 @@ bool MessengerAppWidget::eventFilter(QObject* obj, QEvent* event)
   auto key_event = static_cast<QKeyEvent*>(event);
   if (key_event->key() == Qt::Key_Return)
   {
-    onInputTextEnterPressed();
+    enterInputMessage();
     return true;
   }
 
   return false;
 }
 
-void MessengerAppWidget::onInputTextEnterPressed()
+void MessengerAppWidget::enterInputMessage()
 {
-  auto const input_text = text_input_area_->toPlainText();
-  addTextToOutput(input_text);
+  auto const input_text = QString("me: ") + text_input_area_->toPlainText();
+  text_output_area_->append(input_text);
   text_input_area_->clear();
-}
 
-void MessengerAppWidget::addTextToOutput(QString const& text)
-{
-  text_output_area_->append(text);
+  const auto row = users_list_view_->currentIndex().row();
+  const auto user = static_cast<UsersModel*>(users_list_view_->model())->getUserAt(row);
+
+  emit sendMessageToUser(user.first, input_text);
 }

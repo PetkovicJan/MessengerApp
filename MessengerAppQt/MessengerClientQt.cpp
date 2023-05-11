@@ -6,9 +6,15 @@ MessengerClientQt::MessengerClientQt(
 {
 }
 
-void MessengerClientQt::onUserLoggedIn(int user_id)
+void MessengerClientQt::sendMessageToUser(int id, QString const& msg)
 {
-  emit userLoggedIn(user_id);
+  MessengerClient::sendMessageToUser(id, msg.toStdString());
+}
+
+void MessengerClientQt::onUserLoggedIn(int user_id, std::string const& name)
+{
+  
+  emit userLoggedIn(user_id, QString::fromStdString(name));
 }
 
 void MessengerClientQt::onUserLoggedOut(int user_id)
@@ -18,5 +24,5 @@ void MessengerClientQt::onUserLoggedOut(int user_id)
 
 void MessengerClientQt::onUserMessageReceived(int user_id, std::string const& msg)
 {
-  emit userMessageReceived(user_id, msg);
+  emit userMessageReceived(user_id, QString::fromStdString(msg));
 }

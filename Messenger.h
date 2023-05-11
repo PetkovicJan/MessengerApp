@@ -102,11 +102,13 @@ public:
   explicit MessengerClient(
     std::string const& ip_str, std::string const& port_str);
 
+  void sendMessageToUser(int id, std::string const& msg);
+
 private:
   virtual void onServerMessageReceived(std::string const& msg) override;
   virtual void onDisconnectedFromServer() override;
 
-  virtual void onUserLoggedIn(int user_id);
+  virtual void onUserLoggedIn(int user_id, std::string const& msg);
   virtual void onUserLoggedOut(int user_id);
   virtual void onUserMessageReceived(int user_id, std::string const& msg);
 };

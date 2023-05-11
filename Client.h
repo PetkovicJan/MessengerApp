@@ -14,9 +14,8 @@ public:
 
   void exec();
 
-private:
-  // Utility functions, that should be used by the derived classes.
   void stopClient();
+
   void sendMessageToServer(std::string const& msg);
 
 private:

@@ -10,18 +10,21 @@ class UsersModel : public QAbstractListModel
 public:
   explicit UsersModel(QObject* parent = nullptr);
 
+  void addUser(int id, QString const& name);
+
+  void removeUser(int id);
+
+  QString getUserName(int id) const;
+
+  std::pair<int, QString> getUserAt(int row) const;
+
+  QList<std::pair<int, QString>> getUsers() const;
+
+private:
   int rowCount(QModelIndex const& index = QModelIndex()) const override;
   QVariant data(QModelIndex const& index, int role = Qt::DisplayRole) const override;
   QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
-  bool insertRows(int row, int count, QModelIndex const& index = QModelIndex()) override;
-  bool removeRows(int row, int count, QModelIndex const& index = QModelIndex()) override;
-  bool setData(QModelIndex const& index, QVariant const& value, int role = Qt::EditRole) override;
-
-  Qt::ItemFlags flags(QModelIndex const& index) const override;
-
-  QList<QString> getUsers() const;
-
 private:
-  QList<QString> users_;
+  QList<std::pair<int, QString>> users_;
 };

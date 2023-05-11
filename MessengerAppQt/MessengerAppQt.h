@@ -10,12 +10,19 @@ class MessengerAppWidget : public QWidget
 public:
   explicit MessengerAppWidget(QWidget* parent = nullptr);
 
+  void addUser(int id, QString const& name);
+
+  void removeUser(int id);
+
+  void setUserMessage(int id, QString const& message);
+
+signals:
+  void sendMessageToUser(int id, QString const& message);
+
 private:
   bool eventFilter(QObject* obj, QEvent* event) override;
 
-  void onInputTextEnterPressed();
-
-  void addTextToOutput(QString const& text);
+  void enterInputMessage();
 
   QListView* users_list_view_ = nullptr;
   QTextEdit* text_input_area_ = nullptr;

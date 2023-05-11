@@ -2,7 +2,53 @@
 
 UsersModel::UsersModel(QObject* parent) : QAbstractListModel(parent)
 {
-  users_.append(QString("Test user"));
+}
+
+void UsersModel::addUser(int id, QString const& name)
+{
+  const auto new_pos = users_.size();
+  beginInsertRows(QModelIndex(), new_pos, new_pos);
+  users_.insert(new_pos, std::make_pair(id, name));
+  endInsertRows();
+}
+
+void UsersModel::removeUser(int id)
+{
+  // Find the item with the given ID.
+  int id_index = -1;
+  for (int i = 0; i < users_.size(); ++i)
+    if (users_.at(i).first == id)
+    {
+      id_index = i;
+      break;
+    }
+
+  if (id_index == -1) return;
+
+  beginRemoveRows(QModelIndex(), id_index, id_index);
+  users_.removeAt(id_index);
+  endRemoveRows();
+}
+
+QString UsersModel::getUserName(int id) const
+{
+  // Find the item with the given ID.
+  int id_index = -1;
+  for (int i = 0; i < users_.size(); ++i)
+    if (users_.at(i).first == id)
+    {
+      id_index = i;
+      break;
+    }
+
+  if (id_index == -1) return "";
+
+  return users_.at(id_index).second;
+}
+
+std::pair<int, QString> UsersModel::getUserAt(int row) const
+{
+  return users_.at(row);
 }
 
 int UsersModel::rowCount(QModelIndex const&) const
@@ -20,7 +66,7 @@ QVariant UsersModel::data(QModelIndex const& index, int role) const
   if (!is_in_range)
     return QVariant();
 
-  return users_.at(row);
+  return users_.at(row).second;
 }
 
 QVariant UsersModel::headerData(
@@ -35,55 +81,7 @@ QVariant UsersModel::headerData(
   return QString("Users");
 }
 
-bool UsersModel::insertRows(int row, int count, QModelIndex const& index)
-{
-  const int last_row = row + count - 1;
-  beginInsertRows(QModelIndex(), row, last_row);
-
-  for (int i = 0; i < count; ++i)
-    users_.insert(row, QString());
-
-  endInsertRows();
-
-  return true;
-}
-
-bool UsersModel::removeRows(int row, int count, QModelIndex const& index)
-{
-  const int last_row = row + count - 1;
-  beginRemoveRows(QModelIndex(), row, last_row);
-
-  for (int i = 0; i < count; ++i)
-    users_.removeAt(row);
-
-  endRemoveRows();
-
-  return true;
-}
-
-bool UsersModel::setData(
-  QModelIndex const& index, QVariant const& value, int role)
-{
-  if (role != Qt::EditRole)
-    return false;
-
-  const int row = index.row();
-  users_[row] = value.toString();
-
-  emit dataChanged(index, index, { Qt::EditRole });
-
-  return true;
-}
-
-Qt::ItemFlags UsersModel::flags(QModelIndex const& index) const
-{
-  if (!index.isValid())
-    return Qt::ItemIsEnabled;
-
-  return QAbstractListModel::flags(index) | Qt::ItemIsEditable;
-}
-
-QList<QString> UsersModel::getUsers() const
+QList<std::pair<int, QString>> UsersModel::getUsers() const
 {
   return users_;
 }

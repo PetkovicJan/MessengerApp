@@ -121,6 +121,13 @@ MessengerClient::MessengerClient(
   Client(ip_str, port_str)
 {}
 
+void MessengerClient::sendMessageToUser(int client_to, std::string const& msg)
+{
+    AppMessage new_msg(AppMessageType::UserSentMessage);
+    new_msg << client_to << msg;
+    sendMessageToServer(serialize(new_msg));
+}
+
 void MessengerClient::onServerMessageReceived(std::string const& data)
 {
   auto app_msg = deserialize(data);
@@ -129,8 +136,9 @@ void MessengerClient::onServerMessageReceived(std::string const& data)
   if (msg_t == AppMessageType::UserLoggedIn)
   {
     int user_id;
-    app_msg >> user_id;
-    onUserLoggedIn(user_id);
+    std::string user_name;
+    app_msg >> user_id >> user_name;
+    onUserLoggedIn(user_id, user_name);
   }
   else if (msg_t == AppMessageType::UserLoggedOut)
   {
@@ -151,7 +159,7 @@ void MessengerClient::onDisconnectedFromServer()
 {
 }
 
-void MessengerClient::onUserLoggedIn(int user_id)
+void MessengerClient::onUserLoggedIn(int user_id, std::string const& user_name)
 {
 }
 
