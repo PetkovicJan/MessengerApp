@@ -10,7 +10,7 @@ Server::Server(std::string const& ip_str, std::string const& port_str, int max_n
 
 Server::~Server()
 {
-  server_running_.store(false);
+  server_running_ = false;
 
   if (accepting_thread_.joinable())
     accepting_thread_.join();
@@ -18,15 +18,17 @@ Server::~Server()
 
 void Server::exec()
 {
-  server_running_.store(true);
+  server_running_ = true;
 
+  // This thread is responsible for listening and accepting new clients.
   accepting_thread_ = std::move(std::thread(&Server::acceptingService, this));
 
-  while (server_running_.load())
+  // Run message processing loop.
+  while (server_running_)
   {
     while (!message_queue_.empty())
     {
-      auto msg = message_queue_.pop();
+      auto const msg = message_queue_.pop();
       handleMessage(msg);
     }
   }
@@ -34,21 +36,21 @@ void Server::exec()
 
 void Server::stopServer()
 {
-  server_running_.store(false);
+  server_running_ = false;
 }
 
 void Server::sendMessageToClient(int client_id, std::string msg)
 {
   std::lock_guard<std::mutex> lg(clients_mutex_);
 
-  auto const& v = clients_;
+  auto const& c = clients_;
   auto const client_it = std::find_if(
-    v.cbegin(), v.cend(), [client_id](auto const& client_ptr)
+    c.cbegin(), c.cend(), [client_id](auto const& client_ptr)
     {
       return client_ptr->id() == client_id;
     });
 
-  if (client_it != v.cend())
+  if (client_it != c.cend())
     (*client_it)->send(msg);
 }
 
@@ -93,7 +95,7 @@ void Server::handleMessage(Message const& msg)
 
 void Server::acceptingService()
 {
-  while (server_running_.load())
+  while (server_running_)
   {
     auto client_connection = acceptConnection();
     {
@@ -120,6 +122,7 @@ std::unique_ptr<Connection> Server::acceptConnection()
 {
   auto client_socket = listening_socket_.accept();
 
+  // This object is responsible for accepting client messages and posting them to the message queue.
   return std::make_unique<Connection>(
     id_counter_++, std::move(client_socket), message_queue_);
 }

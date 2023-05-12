@@ -40,7 +40,7 @@ private:
 };
 
 template<typename DataT>
-AppMessage& operator << (AppMessage& msg, DataT const& put_data)
+AppMessage& operator<< (AppMessage& msg, DataT const& put_data)
 {
   static_assert(std::is_standard_layout_v<DataT>);
 
@@ -56,7 +56,7 @@ AppMessage& operator << (AppMessage& msg, DataT const& put_data)
 }
 
 template<typename DataT>
-AppMessage& operator >> (AppMessage& msg, DataT& take_data)
+AppMessage& operator>> (AppMessage& msg, DataT& take_data)
 {
   static_assert(std::is_standard_layout_v<DataT>);
 

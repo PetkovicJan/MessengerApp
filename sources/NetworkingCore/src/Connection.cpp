@@ -4,13 +4,13 @@ Connection::Connection(
   int unique_id, ConnectedSocket&& socket, MessageQueue& message_queue) : 
   unique_id_(unique_id), socket_(std::move(socket)), message_queue_(message_queue)
 {
-  is_alive_.store(true);
+  is_alive_ = true;
   recv_thread_ = std::move(std::thread(&Connection::receivingService, this));
 }
 
 Connection::~Connection()
 {
-  is_alive_.store(false);
+  is_alive_ = false;
   if (recv_thread_.joinable())
     recv_thread_.join();
 }
@@ -22,7 +22,7 @@ int Connection::id() const
 
 bool Connection::isAlive() const
 {
-  return is_alive_.load();
+  return is_alive_;
 }
 
 // Note that sending and receiving from the same socket is thread safe. 
@@ -35,7 +35,7 @@ void Connection::send(std::string const& msg)
 
 void Connection::receivingService()
 {
-  while (is_alive_.load())
+  while (is_alive_)
   {
     auto const msg = socket_.receive();
     if (msg.size() > 0)
@@ -43,7 +43,7 @@ void Connection::receivingService()
     else
     {
       message_queue_.push(Message{ MessageType::ClientDisconnected, unique_id_, "" });
-      is_alive_.store(false);
+      is_alive_ = false;
     }
   }
 }

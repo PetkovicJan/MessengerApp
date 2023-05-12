@@ -1,9 +1,12 @@
 #include <ClientApp/MessengerAppQt.h>
-
 #include <ClientApp/UsersModelQt.h>
 
 #include <QKeyEvent>
 #include <QLayout>
+#include <QStackedWidget>
+#include <QLabel>
+#include <QLineEdit>
+#include <QPushButton>
 
 #include <iostream>
 
@@ -11,7 +14,30 @@ MessengerAppWidget::MessengerAppWidget(QWidget* parent) : QWidget(parent)
 {
   this->setFixedSize(QSize(800, 600));
 
-  // Create sub-widgets.
+  // Create entrance widget.
+  auto entrance_widget = new QWidget();
+
+  auto username_label = new QLabel("Username: ");
+  auto username_edit = new QLineEdit();
+  auto confirm_button = new QPushButton("Log in!");
+
+  auto content_layout = new QHBoxLayout();
+  content_layout->addStretch();
+  content_layout->addWidget(username_label);
+  content_layout->addWidget(username_edit);
+  content_layout->addWidget(confirm_button);
+  content_layout->addStretch();
+
+  auto vertical_layout = new QHBoxLayout();
+  vertical_layout->addStretch();
+  vertical_layout->addLayout(content_layout);
+  vertical_layout->addStretch();
+
+  entrance_widget->setLayout(vertical_layout);
+
+  // Create main widget.
+  auto main_widget = new QWidget();
+
   users_list_view_ = new QListView();
   auto users_model = new UsersModel(this);
   users_list_view_->setModel(users_model);
@@ -22,7 +48,6 @@ MessengerAppWidget::MessengerAppWidget(QWidget* parent) : QWidget(parent)
   text_output_area_ = new QTextEdit();
   text_output_area_->setReadOnly(true);
 
-  // Set layout.
   auto users_layout = new QVBoxLayout();
   users_layout->addWidget(users_list_view_);
 
@@ -34,7 +59,25 @@ MessengerAppWidget::MessengerAppWidget(QWidget* parent) : QWidget(parent)
   main_layout->addLayout(users_layout, 1);
   main_layout->addLayout(text_layout, 2);
 
-  this->setLayout(main_layout);
+  main_widget->setLayout(main_layout);
+
+  // Create stacked widget.
+  auto stacked_widget = new QStackedWidget();
+  stacked_widget->addWidget(entrance_widget);
+  stacked_widget->addWidget(main_widget);
+
+  auto layout = new QHBoxLayout();
+  layout->addWidget(stacked_widget);
+  this->setLayout(layout);
+
+  // Make connections.
+  QObject::connect(confirm_button, &QPushButton::clicked, 
+    [this, stacked_widget, main_widget, username_edit]() 
+    {
+      const auto username = username_edit->text();
+      stacked_widget->setCurrentWidget(main_widget);
+      emit userLoggedIn(username);
+    });
 }
 
 void MessengerAppWidget::addUser(int id, QString const& name)

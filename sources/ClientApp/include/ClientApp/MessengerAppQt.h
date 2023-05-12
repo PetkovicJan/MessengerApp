@@ -17,6 +17,8 @@ public:
   void setUserMessage(int id, QString const& message);
 
 signals:
+  void userLoggedIn(QString const& username);
+
   void sendMessageToUser(int id, QString const& message);
 
 private:

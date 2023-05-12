@@ -4,7 +4,7 @@
 #include <ClientApp/MessengerAppQt.h>
 #include <ClientApp/MessengerClientQt.h>
 
-#undef DEBUG
+#define DEBUG
 
 int main(int argc, char* argv[]) {
   // This machine's IP.
