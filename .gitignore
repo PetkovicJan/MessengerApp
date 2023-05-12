@@ -1,12 +1,2 @@
-# Ignore everything
-*
-
-# Except 
-!*/
-!.gitignore
-!*.cpp
-!*.hpp
-!*.h
-
-# But ignore moc files
-moc_*
+build
+.vs

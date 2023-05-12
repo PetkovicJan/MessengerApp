@@ -1,0 +1,32 @@
+# Set the project name.
+project(NetworkingCore)
+
+# Set header files.
+set(HPP_DIR ${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME})
+set(HPP_FILES 
+  ${HPP_DIR}/Client.h
+  ${HPP_DIR}/Connection.h
+  ${HPP_DIR}/Message.h
+  ${HPP_DIR}/Messenger.h
+  ${HPP_DIR}/Server.h
+  ${HPP_DIR}/Socket.h
+  ${HPP_DIR}/ThreadSafeQueue.h)
+
+# Set source files.
+set(CPP_DIR ${PROJECT_SOURCE_DIR}/src)
+set(CPP_FILES 
+  ${CPP_DIR}/Client.cpp
+  ${CPP_DIR}/Connection.cpp
+  ${CPP_DIR}/Messenger.cpp
+  ${CPP_DIR}/Server.cpp
+  ${CPP_DIR}/Socket.cpp)
+
+# Add the executable.
+add_library(${PROJECT_NAME} STATIC ${CPP_FILES} ${HPP_FILES})
+
+# Add include directory.
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
+
+# Link libraries.
+set(LIBRARIES Ws2_32.lib)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRARIES})

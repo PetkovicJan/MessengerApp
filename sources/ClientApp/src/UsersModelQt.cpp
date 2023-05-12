@@ -1,4 +1,4 @@
-#include "UsersModelQt.h"
+#include <ClientApp/UsersModelQt.h>
 
 UsersModel::UsersModel(QObject* parent) : QAbstractListModel(parent)
 {

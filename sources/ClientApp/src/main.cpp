@@ -1,8 +1,8 @@
 #include <QApplication>
 #include <QMainWindow>
 
-#include "MessengerAppQt.h"
-#include "MessengerClientQt.h"
+#include <ClientApp/MessengerAppQt.h>
+#include <ClientApp/MessengerClientQt.h>
 
 #undef DEBUG
 

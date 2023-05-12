@@ -1,5 +1,5 @@
-#include "../Server.h"
-#include "../Messenger.h"
+#include <NetworkingCore/Server.h>
+#include <NetworkingCore/Messenger.h>
 
 int main(int argc, char* argv[])
 {

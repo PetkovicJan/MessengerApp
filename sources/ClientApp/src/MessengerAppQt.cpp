@@ -1,6 +1,6 @@
-#include "MessengerAppQt.h"
+#include <ClientApp/MessengerAppQt.h>
 
-#include "UsersModelQt.h"
+#include <ClientApp/UsersModelQt.h>
 
 #include <QKeyEvent>
 #include <QLayout>

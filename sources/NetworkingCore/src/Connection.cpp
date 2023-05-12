@@ -1,4 +1,4 @@
-#include "Connection.h"
+#include <NetworkingCore/Connection.h>
 
 Connection::Connection(
   int unique_id, ConnectedSocket&& socket, MessageQueue& message_queue) : 

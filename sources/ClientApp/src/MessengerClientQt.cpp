@@ -1,4 +1,4 @@
-#include "MessengerClientQt.h"
+#include <ClientApp/MessengerClientQt.h>
 
 MessengerClientQt::MessengerClientQt(
   std::string const& ip_str, std::string const& port_str, QObject* parent) : 
