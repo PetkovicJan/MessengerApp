@@ -4,7 +4,7 @@
 #include <ClientApp/MessengerAppQt.h>
 #include <ClientApp/MessengerClientQt.h>
 
-#define DEBUG
+//#define DEBUG
 
 int main(int argc, char* argv[]) {
   // This machine's IP.
@@ -35,8 +35,15 @@ int main(int argc, char* argv[]) {
                    &MessengerAppWidget::removeUser);
   QObject::connect(&client, &MessengerClientQt::userMessageReceived,
                    main_widget, &MessengerAppWidget::setUserMessage);
-  QObject::connect(main_widget, &MessengerAppWidget::sendMessageToUser, &client,
-                   &MessengerClientQt::sendMessageToUser);
+  QObject::connect(main_widget, &MessengerAppWidget::sendMessageToUser, 
+    [&client](int id, QString const& msg)
+    {
+      AppMessage app_msg(AppMessageType::UserSentMessage);
+      app_msg << id << msg.toStdString();
+
+      client.sendMessage(app_msg);
+    });
+
 #endif
 
   QMainWindow main_window;

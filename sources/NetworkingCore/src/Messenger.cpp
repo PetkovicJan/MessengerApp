@@ -85,8 +85,7 @@ MessengerServer::MessengerServer(
 
 void MessengerServer::onClientConnected(int client_id)
 {
-  AppMessage msg(AppMessageType::UserLoggedIn, std::to_string(client_id));
-  sendMessageToAllClients(serialize(msg), client_id);
+  // At this point nothing needs to be done, since the client has only connected to the server, but has not yet logged in.
 }
 
 void MessengerServer::onClientDisconnected(int client_id)
@@ -99,7 +98,18 @@ void MessengerServer::onClientMessageReceived(
   int client_id, std::string const& msg_str)
 {
   auto app_msg = deserialize(msg_str);
-  if (app_msg.type() == AppMessageType::UserSentMessage)
+  auto const msg_type = app_msg.type();
+  if (msg_type == AppMessageType::UserLoggedIn)
+  {
+    // Obtain the receiving client ID and its username.
+    int client_id;
+    std::string username;
+    app_msg >> client_id >> username;
+
+    // Inform the other clients about the new client.
+    sendMessageToAllClients(msg_str, client_id);
+  }
+  else if (msg_type == AppMessageType::UserSentMessage)
   {
     // Obtain the receiving client ID and message.
     int client_to;
@@ -121,11 +131,9 @@ MessengerClient::MessengerClient(
   Client(ip_str, port_str)
 {}
 
-void MessengerClient::sendMessageToUser(int client_to, std::string const& msg)
+void MessengerClient::sendMessage(AppMessage const& msg)
 {
-    AppMessage new_msg(AppMessageType::UserSentMessage);
-    new_msg << client_to << msg;
-    sendMessageToServer(serialize(new_msg));
+  sendMessageToServer(serialize(msg));
 }
 
 void MessengerClient::onServerMessageReceived(std::string const& data)

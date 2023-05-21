@@ -6,14 +6,8 @@ MessengerClientQt::MessengerClientQt(
 {
 }
 
-void MessengerClientQt::sendMessageToUser(int id, QString const& msg)
-{
-  MessengerClient::sendMessageToUser(id, msg.toStdString());
-}
-
 void MessengerClientQt::onUserLoggedIn(int user_id, std::string const& name)
 {
-  
   emit userLoggedIn(user_id, QString::fromStdString(name));
 }
 
