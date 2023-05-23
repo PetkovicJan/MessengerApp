@@ -75,7 +75,11 @@ MessengerAppWidget::MessengerAppWidget(QWidget* parent) : QWidget(parent)
     [this, stacked_widget, main_widget, username_edit]() 
     {
       const auto username = username_edit->text();
+
+      username_ = username;
+
       stacked_widget->setCurrentWidget(main_widget);
+
       emit userLoggedIn(username);
     });
 }
@@ -117,7 +121,7 @@ bool MessengerAppWidget::eventFilter(QObject* obj, QEvent* event)
 
 void MessengerAppWidget::enterInputMessage()
 {
-  auto const input_text = QString("me: ") + text_input_area_->toPlainText();
+  auto const input_text = username_ + QString(": ") + text_input_area_->toPlainText();
   text_output_area_->append(input_text);
   text_input_area_->clear();
 
