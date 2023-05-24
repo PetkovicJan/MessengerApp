@@ -105,16 +105,22 @@ void MessengerServer::onClientMessageReceived(
   int client_id, std::string const& msg_str)
 {
   auto app_msg = deserialize(msg_str);
+
   auto const msg_type = app_msg.type();
   if (msg_type == AppMessageType::UserLoggedIn)
   {
-    // Obtain the receiving client ID and its username.
-    int client_id;
+    // Obtain the username of the logged in client.
     std::string username;
-    app_msg >> client_id >> username;
+    app_msg >> username;
+
+    // When the message comes from the client, it only contains its username, but *not the ID*, 
+    // since it is implicit on the server side. However, when we send the notification message
+    // to other clients, we need to add the ID, so they know which client logged in.
+    AppMessage new_msg(AppMessageType::UserLoggedIn);
+    new_msg << client_id << username;
 
     // Inform the other clients about the new client.
-    sendMessageToAllClients(msg_str, client_id);
+    sendMessageToAllClients(serialize(new_msg), client_id);
   }
   else if (msg_type == AppMessageType::UserSentMessage)
   {
