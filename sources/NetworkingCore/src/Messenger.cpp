@@ -97,6 +97,18 @@ void MessengerServer::onClientConnected(int client_id)
 
 void MessengerServer::onClientDisconnected(int client_id)
 {
+  // First remove the user from the local current users.
+  auto it = std::find_if(current_users_.begin(), current_users_.end(),
+    [client_id](User const& user)
+    {
+      return user.id == client_id;
+    });
+
+  // Sanity check.
+  if (it != current_users_.end())
+    current_users_.erase(it);
+
+  // Finally, notify the rest of the users.
   AppMessage msg(AppMessageType::UserLoggedOut, std::to_string(client_id));
   sendMessageToAllClients(serialize(msg), client_id);
 }
@@ -109,9 +121,21 @@ void MessengerServer::onClientMessageReceived(
   auto const msg_type = app_msg.type();
   if (msg_type == AppMessageType::UserLoggedIn)
   {
-    // Obtain the username of the logged in client.
+    // First notify the new user of all users, that are currently logged in.
+    for (const auto& user : current_users_)
+    {
+      // Create a logged in message.
+      AppMessage notify_msg(AppMessageType::UserLoggedIn);
+      notify_msg << user.id << user.name;
+      sendMessageToClient(client_id, serialize(notify_msg));
+    }
+
+    // Then obtain the username of the logged in client.
     std::string username;
     app_msg >> username;
+
+    // Update the current users.
+    current_users_.push_back({ client_id, username });
 
     // When the message comes from the client, it only contains its username, but *not the ID*, 
     // since it is implicit on the server side. However, when we send the notification message
@@ -119,7 +143,7 @@ void MessengerServer::onClientMessageReceived(
     AppMessage new_msg(AppMessageType::UserLoggedIn);
     new_msg << client_id << username;
 
-    // Inform the other clients about the new client.
+    // Finally, inform the other users about the new user.
     sendMessageToAllClients(serialize(new_msg), client_id);
   }
   else if (msg_type == AppMessageType::UserSentMessage)

@@ -9,6 +9,12 @@
 
 enum class AppMessageType { UserSentMessage, UserLoggedIn, UserLoggedOut };
 
+struct User
+{
+  int id;
+  std::string name;
+};
+
 class AppMessage
 {
 public:
@@ -103,6 +109,9 @@ private:
   void onClientConnected(int client_id) override;
   void onClientDisconnected(int client_id) override;
   void onClientMessageReceived(int client_id, std::string const& msg) override;
+
+  // Users, that are currently logged in.
+  std::vector<User> current_users_;
 };
 
 class MessengerClient : public Client
