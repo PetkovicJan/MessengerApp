@@ -30,9 +30,12 @@ private:
   struct MessageHeader
   {
     AppMessageType type;
-    int size;
-  } header_;
 
+    // Size of the message in bytes *including the size of the header*.
+    int size;
+  };
+
+  MessageHeader header_;
   std::string data_;
 
   friend std::string serialize(AppMessage const&);
@@ -40,7 +43,7 @@ private:
 };
 
 template<typename DataT>
-AppMessage& operator<< (AppMessage& msg, DataT const& put_data)
+AppMessage& operator<<(AppMessage& msg, DataT const& put_data)
 {
   static_assert(std::is_standard_layout_v<DataT>);
 
@@ -52,11 +55,14 @@ AppMessage& operator<< (AppMessage& msg, DataT const& put_data)
 
   std::memcpy(data.data() + curr_sz, &put_data, put_data_sz);
 
+  // Finally change the size of the message in the header.
+  msg.header_.size += put_data_sz;
+
   return msg;
 }
 
 template<typename DataT>
-AppMessage& operator>> (AppMessage& msg, DataT& take_data)
+AppMessage& operator>>(AppMessage& msg, DataT& take_data)
 {
   static_assert(std::is_standard_layout_v<DataT>);
 
@@ -69,6 +75,9 @@ AppMessage& operator>> (AppMessage& msg, DataT& take_data)
   std::memcpy(&take_data, data.data(), take_data_sz);
 
   data = data.substr(take_data_sz, new_sz);
+
+  // Finally change the size of the message in the header.
+  msg.header_.size -= take_data_sz;
 
   return msg;
 }

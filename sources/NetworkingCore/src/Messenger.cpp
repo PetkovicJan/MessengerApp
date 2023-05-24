@@ -63,17 +63,24 @@ AppMessage deserialize(std::string const& str)
 }
 
 template<>
-AppMessage& operator << (AppMessage& msg, std::string const& put_data)
+AppMessage& operator<<(AppMessage& msg, std::string const& put_data)
 {
   msg.data_.append(put_data);
+
+  // Change the size of the message in the header.
+  msg.header_.size += put_data.size();
 
   return msg;
 }
 
 template<>
-AppMessage& operator >> (AppMessage& msg, std::string& take_data)
+AppMessage& operator>>(AppMessage& msg, std::string& take_data)
 {
+  // In case of reading, we simply take the whole string.
   take_data = std::move(msg.data_);
+
+  // Change the size of the message in the header.
+  msg.header_.size -= msg.data_.size();
 
   return msg;
 }
