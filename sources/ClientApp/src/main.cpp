@@ -29,12 +29,17 @@ int main(int argc, char* argv[]) {
 #endif
 
 #ifndef DEBUG
-  QObject::connect(&client, &MessengerClientQt::userLoggedIn, main_widget,
-                   &MessengerAppWidget::addUser);
-  QObject::connect(&client, &MessengerClientQt::userLoggedOut, main_widget,
-                   &MessengerAppWidget::removeUser);
-  QObject::connect(&client, &MessengerClientQt::userMessageReceived,
-                   main_widget, &MessengerAppWidget::setUserMessage);
+
+  // Handle events from the client side.
+  QObject::connect(main_widget, &MessengerAppWidget::userLoggedIn, 
+    [&client](QString const& username) 
+    {
+      AppMessage app_msg(AppMessageType::UserLoggedIn);
+      app_msg << username.toStdString();
+
+      client.sendMessage(app_msg);
+    });
+
   QObject::connect(main_widget, &MessengerAppWidget::sendMessageToUser, 
     [&client](int id, QString const& msg)
     {
@@ -43,6 +48,14 @@ int main(int argc, char* argv[]) {
 
       client.sendMessage(app_msg);
     });
+
+  // Handle events from the server side.
+  QObject::connect(&client, &MessengerClientQt::userLoggedIn, main_widget,
+                   &MessengerAppWidget::addUser);
+  QObject::connect(&client, &MessengerClientQt::userLoggedOut, main_widget,
+                   &MessengerAppWidget::removeUser);
+  QObject::connect(&client, &MessengerClientQt::userMessageReceived,
+                   main_widget, &MessengerAppWidget::setUserMessage);
 
 #endif
 
