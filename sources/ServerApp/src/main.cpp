@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
   // Port number from MS documentation.
   auto const port_num_str = "27015";
 
-  Server server(ip_str, port_num_str, 5);
+  MessengerServer server(ip_str, port_num_str, 5);
   server.exec();
 
   return 0;
