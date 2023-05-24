@@ -105,14 +105,9 @@ void Server::acceptingService()
       if (num_clients < max_clients_)
       {
         const int client_id = client_connection->id();
-        client_connection->send("Connection with server succeeded.");
 
         clients_.push_back(std::move(client_connection));
         message_queue_.push(Message{ MessageType::ClientConnected, client_id, ""});
-      }
-      else
-      {
-        client_connection->send("Connection with server failed.");
       }
     }
   }
