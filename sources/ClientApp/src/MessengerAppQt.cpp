@@ -39,8 +39,8 @@ MessengerAppWidget::MessengerAppWidget(QWidget* parent) : QWidget(parent)
   auto main_widget = new QWidget();
 
   users_list_view_ = new QListView();
-  auto users_model = new UsersModel(this);
-  users_list_view_->setModel(users_model);
+  users_model_ = new UsersModel(this);
+  users_list_view_->setModel(users_model_);
 
   text_input_area_ = new QTextEdit();
   text_input_area_->installEventFilter(this);
@@ -86,17 +86,17 @@ MessengerAppWidget::MessengerAppWidget(QWidget* parent) : QWidget(parent)
 
 void MessengerAppWidget::addUser(int id, QString const& name)
 {
-  static_cast<UsersModel*>(users_list_view_->model())->addUser(id, name);
+  users_model_->addUser(id, name);
 }
 
 void MessengerAppWidget::removeUser(int id)
 {
-  static_cast<UsersModel*>(users_list_view_->model())->removeUser(id);
+  users_model_->removeUser(id);
 }
 
 void MessengerAppWidget::setUserMessage(int id, QString const& message)
 {
-  const auto name = static_cast<UsersModel*>(users_list_view_->model())->getUserName(id);
+  const auto name = users_model_->getUserName(id);
   auto const text = name + QString(": ") + message;
   text_output_area_->append(text);
 }
@@ -126,7 +126,7 @@ void MessengerAppWidget::enterInputMessage()
   text_input_area_->clear();
 
   const auto row = users_list_view_->currentIndex().row();
-  const auto user = static_cast<UsersModel*>(users_list_view_->model())->getUserAt(row);
+  const auto user = users_model_->getUserAt(row);
 
   emit sendMessageToUser(user.first, input_text);
 }

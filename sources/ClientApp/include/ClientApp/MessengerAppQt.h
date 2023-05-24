@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ClientApp/UsersModelQt.h>
+
 #include <QWidget>
 #include <QListView>
 #include <QTextEdit>
@@ -31,4 +33,6 @@ private:
   QListView* users_list_view_ = nullptr;
   QTextEdit* text_input_area_ = nullptr;
   QTextEdit* text_output_area_ = nullptr;
+
+  UsersModel* users_model_ = nullptr;
 };
