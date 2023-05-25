@@ -121,8 +121,10 @@ bool MessengerAppWidget::eventFilter(QObject* obj, QEvent* event)
 
 void MessengerAppWidget::enterInputMessage()
 {
-  auto const input_text = username_ + QString(": ") + text_input_area_->toPlainText();
-  text_output_area_->append(input_text);
+  auto const input_text = text_input_area_->toPlainText();
+
+  // Add this user's text to output text area.
+  text_output_area_->append(username_ + QString(": ") + input_text);
   text_input_area_->clear();
 
   const auto row = users_list_view_->currentIndex().row();
