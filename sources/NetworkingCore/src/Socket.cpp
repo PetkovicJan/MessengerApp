@@ -122,8 +122,21 @@ void ConnectedSocket::send(std::string const& data) const
     throw std::runtime_error("Send failed.");
 }
 
-std::string ConnectedSocket::receive() const
+std::optional<std::string> ConnectedSocket::try_receive() const
 {
+  // Check the read status of the socket.
+  fd_set read_set;
+  FD_ZERO(&read_set);
+  FD_SET(socket_.handle(), &read_set);
+
+  timeval time_interval;
+  time_interval.tv_sec = 1;
+
+  // If not ready after timeout, return early.
+  if (select(0, &read_set, NULL, NULL, &time_interval) == 0)
+    return std::nullopt;
+
+  // The socket is ready, read out the data.
   const int buff_size = 512;
   std::string buffer('x', buff_size);
   const int num_bytes = buffer.size();

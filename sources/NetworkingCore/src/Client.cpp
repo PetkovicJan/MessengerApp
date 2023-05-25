@@ -17,10 +17,12 @@ void Client::exec()
   is_alive_.store(true);
   while (is_alive_.load())
   {
-    auto const msg = server_->receive();
-    if (msg.size() == 0) break;
+    auto const msg = server_->try_receive();
+    if (!msg.has_value()) continue;
 
-    onServerMessageReceived(msg);
+    if (msg->size() == 0) break;
+
+    onServerMessageReceived(*msg);
   }
 
   onDisconnectedFromServer();

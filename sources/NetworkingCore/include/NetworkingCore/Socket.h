@@ -4,6 +4,7 @@
 #include <WS2tcpip.h>
 
 #include <string>
+#include <optional>
 
 enum class SocketType { Server, Client };
 
@@ -70,7 +71,7 @@ public:
 
   void send(std::string const& data) const;
 
-  std::string receive() const;
+  std::optional<std::string> try_receive() const;
 
 private:
   BareSocket socket_;

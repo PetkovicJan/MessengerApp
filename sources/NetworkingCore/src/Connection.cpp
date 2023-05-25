@@ -37,9 +37,11 @@ void Connection::receivingService()
 {
   while (is_alive_)
   {
-    auto const msg = socket_.receive();
-    if (msg.size() > 0)
-      message_queue_.push(Message{ MessageType::ClientMessage, unique_id_, msg });
+    auto const msg = socket_.try_receive();
+    if (!msg.has_value()) continue;
+
+    if (msg->size() > 0)
+      message_queue_.push(Message{ MessageType::ClientMessage, unique_id_, *msg });
     else
     {
       message_queue_.push(Message{ MessageType::ClientDisconnected, unique_id_, "" });
