@@ -93,10 +93,13 @@ MessengerServer::MessengerServer(
 void MessengerServer::onClientConnected(int client_id)
 {
   // At this point nothing needs to be done, since the client has only connected to the server, but has not yet logged in.
+  std::cout << "Server::onClientConnected: " << client_id << '\n';
 }
 
 void MessengerServer::onClientDisconnected(int client_id)
 {
+  std::cout << "Server::onClientDisconnected: " << client_id << '\n';
+
   // First remove the user from the local current users.
   auto it = std::find_if(current_users_.begin(), current_users_.end(),
     [client_id](User const& user)
@@ -120,6 +123,9 @@ void MessengerServer::onClientMessageReceived(
   auto app_msg = deserialize(msg_str);
 
   auto const msg_type = app_msg.type();
+
+  std::cout << "Server::onClientMessageReceived: " << client_id << " " << int(msg_type) << '\n';
+
   if (msg_type == AppMessageType::UserLoggedIn)
   {
     // First notify the new user of all users, that are currently logged in.
