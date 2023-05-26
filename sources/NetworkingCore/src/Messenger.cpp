@@ -109,7 +109,8 @@ void MessengerServer::onClientDisconnected(int client_id)
     current_users_.erase(it);
 
   // Finally, notify the rest of the users.
-  AppMessage msg(AppMessageType::UserLoggedOut, std::to_string(client_id));
+  AppMessage msg(AppMessageType::UserLoggedOut);
+  msg << client_id;
   sendMessageToAllClients(serialize(msg), client_id);
 }
 
