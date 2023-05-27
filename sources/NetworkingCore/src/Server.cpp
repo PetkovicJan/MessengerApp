@@ -90,7 +90,23 @@ void Server::handleMessage(Message const& msg)
   else if (msg_t == MessageType::ClientConnected)
     onClientConnected(msg.client_id);
   else if (msg_t == MessageType::ClientDisconnected)
+  {
+    // Remove the client connection, if it has disconnected.
+    auto const client_id = msg.client_id;
+
+    auto it = std::find_if(clients_.begin(), clients_.end(),
+      [client_id](auto const& client)
+      {
+        return client->id() == client_id;
+      });
+
+    // Sanity check.
+    if (it != clients_.end())
+      clients_.erase(it);
+
+    // Invoke handler.
     onClientDisconnected(msg.client_id);
+  }
 }
 
 void Server::acceptingService()
