@@ -10,6 +10,19 @@
 
 #include <iostream>
 
+namespace detail
+{
+  static void appendStringToStringListModel(QStringListModel* model, QString const& string)
+  {
+    // Append row at the end.
+    const auto row = model->rowCount();
+    if (!model->insertRow(row))
+      return;
+
+    model->setData(model->index(row), string);
+  }
+}
+
 MessengerAppWidget::MessengerAppWidget(QWidget* parent) : QWidget(parent)
 {
   this->setFixedSize(QSize(800, 600));
@@ -45,14 +58,13 @@ MessengerAppWidget::MessengerAppWidget(QWidget* parent) : QWidget(parent)
   text_input_area_ = new QTextEdit();
   text_input_area_->installEventFilter(this);
 
-  text_output_area_ = new QTextEdit();
-  text_output_area_->setReadOnly(true);
+  dialog_view_ = new QListView();
 
   auto users_layout = new QVBoxLayout();
   users_layout->addWidget(users_list_view_);
 
   auto text_layout = new QVBoxLayout();
-  text_layout->addWidget(text_output_area_, 2);
+  text_layout->addWidget(dialog_view_, 2);
   text_layout->addWidget(text_input_area_, 1);
 
   auto main_layout = new QHBoxLayout();
@@ -71,34 +83,68 @@ MessengerAppWidget::MessengerAppWidget(QWidget* parent) : QWidget(parent)
   this->setLayout(layout);
 
   // Make connections.
+
+  // On login button clicked.
   QObject::connect(confirm_button, &QPushButton::clicked, 
     [this, stacked_widget, main_widget, username_edit]() 
     {
+      // Set the username.
       const auto username = username_edit->text();
-
       username_ = username;
 
+      // Switch from login widget to the main widget.
       stacked_widget->setCurrentWidget(main_widget);
 
+      // Notify the world about the login.
       emit userLoggedIn(username);
+    });
+
+  // On user selected (from users list).
+  const auto selection_model = users_list_view_->selectionModel();
+  QObject::connect(selection_model, &QItemSelectionModel::currentChanged, 
+    [this](QModelIndex const& current_index) 
+    {
+      const auto [id, name] = users_model_->getUserAt(current_index.row());
+
+      dialog_view_->setModel(user_dialogs_.at(id));
     });
 }
 
 void MessengerAppWidget::addUser(int id, QString const& name)
 {
+  // First create a new dialog model.
+  user_dialogs_.emplace(id, new QStringListModel(this));
+
+  // Then add the user to the list.
   users_model_->addUser(id, name);
 }
 
 void MessengerAppWidget::removeUser(int id)
 {
+  // Remove the dialog model.
+
+  // Sanity check.
+  if (user_dialogs_.count(id))
+  {
+    const auto [current_id, name] = getCurrentlySelectedUser();
+
+    // If the currently selected user needs to be removed, unset the dialog first.
+    if (current_id == id) dialog_view_->setModel(nullptr);
+
+    user_dialogs_.erase(id);
+  }
+
+  // Remove the user from the users list.
   users_model_->removeUser(id);
 }
 
 void MessengerAppWidget::setUserMessage(int id, QString const& message)
 {
   const auto name = users_model_->getUserName(id);
-  auto const text = name + QString(": ") + message;
-  text_output_area_->append(text);
+  const auto text = name + QString(": ") + message;
+
+  const auto user_dialog = user_dialogs_.at(id);
+  detail::appendStringToStringListModel(user_dialog, text);
 }
 
 bool MessengerAppWidget::eventFilter(QObject* obj, QEvent* event)
@@ -121,14 +167,24 @@ bool MessengerAppWidget::eventFilter(QObject* obj, QEvent* event)
 
 void MessengerAppWidget::enterInputMessage()
 {
-  auto const input_text = text_input_area_->toPlainText();
-
-  // Add this user's text to output text area.
-  text_output_area_->append(username_ + QString(": ") + input_text);
+  // First take the text from input area.
+  const auto input_text = text_input_area_->toPlainText();
   text_input_area_->clear();
 
-  const auto row = users_list_view_->currentIndex().row();
-  const auto user = users_model_->getUserAt(row);
+  // Obtain the dialog for the currently selected user.
+  const auto [id, name] = getCurrentlySelectedUser();
+  const auto user_dialog = user_dialogs_.at(id);
 
-  emit sendMessageToUser(user.first, input_text);
+  // Add this user's text to the dialog.
+  const auto text = username_ + QString(": ") + input_text;
+  detail::appendStringToStringListModel(user_dialog, text);
+
+  // Notfiy the 
+  emit sendMessageToUser(id, input_text);
+}
+
+std::pair<int, QString> MessengerAppWidget::getCurrentlySelectedUser() const
+{
+  const auto row = users_list_view_->currentIndex().row();
+  return users_model_->getUserAt(row);
 }

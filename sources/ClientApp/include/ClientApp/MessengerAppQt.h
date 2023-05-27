@@ -5,6 +5,7 @@
 #include <QWidget>
 #include <QListView>
 #include <QTextEdit>
+#include <QStringListModel>
 
 class MessengerAppWidget : public QWidget
 {
@@ -28,11 +29,16 @@ private:
 
   void enterInputMessage();
 
+  std::pair<int, QString> getCurrentlySelectedUser() const;
+
   QString username_;
 
   QListView* users_list_view_ = nullptr;
-  QTextEdit* text_input_area_ = nullptr;
-  QTextEdit* text_output_area_ = nullptr;
-
   UsersModel* users_model_ = nullptr;
+
+  // Dialog view and corresponding models representing dialog for each logged in user.
+  QListView* dialog_view_ = nullptr;
+  std::map<int, QStringListModel*> user_dialogs_;
+
+  QTextEdit* text_input_area_ = nullptr;
 };
