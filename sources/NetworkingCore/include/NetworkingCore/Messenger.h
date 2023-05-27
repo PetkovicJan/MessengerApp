@@ -110,6 +110,8 @@ private:
   void onClientDisconnected(int client_id) override;
   void onClientMessageReceived(int client_id, std::string const& msg) override;
 
+  void sendMessageToAllUsers(AppMessage const& msg, std::optional<int> opt_ignore_id = std::nullopt);
+
   // Users, that are currently logged in.
   std::vector<User> current_users_;
 };

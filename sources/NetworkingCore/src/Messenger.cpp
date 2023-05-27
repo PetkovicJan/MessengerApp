@@ -114,7 +114,7 @@ void MessengerServer::onClientDisconnected(int client_id)
   // Finally, notify the rest of the users.
   AppMessage msg(AppMessageType::UserLoggedOut);
   msg << client_id;
-  sendMessageToAllClients(serialize(msg), client_id);
+  sendMessageToAllUsers(msg, client_id);
 }
 
 void MessengerServer::onClientMessageReceived(
@@ -151,7 +151,7 @@ void MessengerServer::onClientMessageReceived(
     new_msg << client_id << username;
 
     // Finally, inform the other users about the new user.
-    sendMessageToAllClients(serialize(new_msg), client_id);
+    sendMessageToAllUsers(new_msg, client_id);
   }
   else if (msg_type == AppMessageType::UserSentMessage)
   {
@@ -167,6 +167,18 @@ void MessengerServer::onClientMessageReceived(
 
     // Send new message to the receiving client.
     sendMessageToClient(client_to, serialize(new_msg));
+  }
+}
+
+void MessengerServer::sendMessageToAllUsers(AppMessage const& msg, std::optional<int> opt_ignore_id)
+{
+  const auto serialized_msg = serialize(msg);
+  for (auto const& user : current_users_)
+  {
+    if (opt_ignore_id && *opt_ignore_id == user.id) 
+      continue;
+
+    sendMessageToClient(user.id, serialized_msg);
   }
 }
 
