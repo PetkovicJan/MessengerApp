@@ -7,6 +7,8 @@
 #include <QTextEdit>
 #include <QStringListModel>
 
+#include <optional>
+
 class MessengerAppWidget : public QWidget
 {
   Q_OBJECT
