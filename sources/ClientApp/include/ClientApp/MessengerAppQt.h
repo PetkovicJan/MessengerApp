@@ -29,7 +29,7 @@ private:
 
   void enterInputMessage();
 
-  std::pair<int, QString> getCurrentlySelectedUser() const;
+  std::optional<std::pair<int, QString>> getCurrentlySelectedUser() const;
 
   QString username_;
 
