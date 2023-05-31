@@ -10,7 +10,8 @@ set(HPP_FILES
   ${HPP_DIR}/Messenger.h
   ${HPP_DIR}/Server.h
   ${HPP_DIR}/Socket.h
-  ${HPP_DIR}/ThreadSafeQueue.h)
+  ${HPP_DIR}/ThreadSafeQueue.h
+  ${HPP_DIR}/UsersDB.h)
 
 # Set source files.
 set(CPP_DIR ${PROJECT_SOURCE_DIR}/src)
@@ -19,7 +20,8 @@ set(CPP_FILES
   ${CPP_DIR}/Connection.cpp
   ${CPP_DIR}/Messenger.cpp
   ${CPP_DIR}/Server.cpp
-  ${CPP_DIR}/Socket.cpp)
+  ${CPP_DIR}/Socket.cpp
+  ${CPP_DIR}/UsersDB.cpp)
 
 # Add the executable.
 add_library(${PROJECT_NAME} STATIC ${CPP_FILES} ${HPP_FILES})
@@ -28,5 +30,5 @@ add_library(${PROJECT_NAME} STATIC ${CPP_FILES} ${HPP_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 # Link libraries.
-set(LIBRARIES Ws2_32.lib)
+set(LIBRARIES Ws2_32.lib sqlite)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRARIES})

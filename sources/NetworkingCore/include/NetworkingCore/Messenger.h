@@ -2,6 +2,7 @@
 
 #include "Server.h"
 #include "Client.h"
+#include "UsersDB.h"
 
 #include <thread>
 #include <mutex>
@@ -114,6 +115,9 @@ private:
 
   // Users, that are currently logged in.
   std::vector<User> current_users_;
+
+  // Registered users database.
+  UsersDB users_db_;
 };
 
 class MessengerClient : public Client
