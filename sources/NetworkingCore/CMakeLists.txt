@@ -30,5 +30,5 @@ add_library(${PROJECT_NAME} STATIC ${CPP_FILES} ${HPP_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 # Link libraries.
-set(LIBRARIES Ws2_32.lib sqlite)
+set(LIBRARIES Ws2_32.lib nlohmann_json::nlohmann_json sqlite)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRARIES})
