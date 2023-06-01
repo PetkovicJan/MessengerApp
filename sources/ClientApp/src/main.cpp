@@ -34,19 +34,22 @@ int main(int argc, char* argv[]) {
   QObject::connect(main_widget, &MessengerAppWidget::userLoggedIn, 
     [&client](QString const& username) 
     {
-      AppMessage app_msg(AppMessageType::UserLoggedIn);
-      app_msg << username.toStdString();
+      json login_msg;
+      login_msg["type"] = AppMessageType::UserLoggedIn;
+      login_msg["username"] = username.toStdString();
 
-      client.sendMessage(app_msg);
+      client.sendMessage(login_msg);
     });
 
   QObject::connect(main_widget, &MessengerAppWidget::sendMessageToUser, 
     [&client](int id, QString const& msg)
     {
-      AppMessage app_msg(AppMessageType::UserSentMessage);
-      app_msg << id << msg.toStdString();
+      json user_msg;
+      user_msg["type"] = AppMessageType::UserSentMessage;
+      user_msg["user_id"] = id;
+      user_msg["message"] = msg.toStdString();
 
-      client.sendMessage(app_msg);
+      client.sendMessage(user_msg);
     });
 
   // Handle events from the server side.

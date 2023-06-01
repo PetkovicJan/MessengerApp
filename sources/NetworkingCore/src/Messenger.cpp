@@ -4,89 +4,6 @@
 
 #define ADD_DEFAULT_USERS
 
-AppMessage::AppMessage(AppMessageType type, std::optional<std::string> const& opt_data)
-{
-  header_.type = type;
-
-  if (opt_data)
-    data_ = *opt_data;
-
-  header_.size = sizeof(MessageHeader) + data_.size();
-}
-
-AppMessageType AppMessage::type() const
-{
-  return header_.type;
-}
-
-std::string AppMessage::data() const
-{
-  return data_;
-}
-
-std::string serialize(AppMessage const& msg)
-{
-  auto const header_sz = sizeof(AppMessage::MessageHeader);
-
-  auto const& header = msg.header_;
-  const auto& data = msg.data_;
-
-  // Create an array of an appropriate size.
-  std::string res;
-  res.resize(header.size, 'x');
-
-  // First copy the header part.
-  std::memcpy(res.data(), &header, header_sz);
-
-  // Then copy the data part.
-  std::memcpy(res.data() + header_sz, data.data(), data.size());
-
-  return res;
-}
-
-AppMessage deserialize(std::string const& str)
-{
-  auto const header_sz = sizeof(AppMessage::MessageHeader);
-
-  // First read the header part.
-  AppMessage::MessageHeader header;
-  std::memcpy(&header, str.data(), header_sz);
-
-  // Now read the data, since we know the size of the message.
-  std::string data;
-  auto const data_sz = header.size - header_sz;
-  if (data_sz > 0)
-  {
-    data.resize(data_sz, 'x');
-    std::memcpy(data.data(), str.data() + header_sz, data_sz);
-  }
-
-  return AppMessage(header.type, data);
-}
-
-template<>
-AppMessage& operator<<(AppMessage& msg, std::string const& put_data)
-{
-  msg.data_.append(put_data);
-
-  // Change the size of the message in the header.
-  msg.header_.size += put_data.size();
-
-  return msg;
-}
-
-template<>
-AppMessage& operator>>(AppMessage& msg, std::string& take_data)
-{
-  // In case of reading, we simply take the whole string.
-  take_data = std::move(msg.data_);
-
-  // Change the size of the message in the header.
-  msg.header_.size -= msg.data_.size();
-
-  return msg;
-}
-
 MessengerServer::MessengerServer(
   std::string const& ip_str, std::string const& port_str, int max_num_clients) :
   Server(ip_str, port_str, max_num_clients), users_db_("users.db")
@@ -122,19 +39,19 @@ void MessengerServer::onClientDisconnected(int client_id)
     current_users_.erase(it);
 
   // Finally, notify the rest of the users.
-  AppMessage msg(AppMessageType::UserLoggedOut);
-  msg << client_id;
+  json msg;
+  msg["type"] = AppMessageType::UserLoggedOut;
+  msg["user_id"] = client_id;
   sendMessageToAllUsers(msg, client_id);
 }
 
 void MessengerServer::onClientMessageReceived(
   int client_id, std::string const& msg_str)
 {
-  auto app_msg = deserialize(msg_str);
+  const auto app_msg = json::parse(msg_str);
+  const auto msg_type = app_msg["type"].get<AppMessageType>();
 
-  auto const msg_type = app_msg.type();
-
-  std::cout << "Server::onClientMessageReceived: " << client_id << " " << int(msg_type) << '\n';
+  std::cout << "Server::onClientMessageReceived: " << app_msg << '\n';
 
   if (msg_type == AppMessageType::UserLoggedIn)
   {
@@ -142,14 +59,15 @@ void MessengerServer::onClientMessageReceived(
     for (const auto& user : current_users_)
     {
       // Create a logged in message.
-      AppMessage notify_msg(AppMessageType::UserLoggedIn);
-      notify_msg << user.id << user.name;
-      sendMessageToClient(client_id, serialize(notify_msg));
+      json notify_msg;
+      notify_msg["type"] = AppMessageType::UserLoggedIn;
+      notify_msg["user_id"] = user.id;
+      notify_msg["username"] = user.name;
+      sendMessageToClient(client_id, notify_msg.dump());
     }
 
     // Then obtain the username of the logged in client.
-    std::string username;
-    app_msg >> username;
+    const auto username = app_msg["username"].get<std::string>();
 
     // Update the current users.
     current_users_.push_back({ client_id, username });
@@ -157,8 +75,10 @@ void MessengerServer::onClientMessageReceived(
     // When the message comes from the client, it only contains its username, but *not the ID*, 
     // since it is implicit on the server side. However, when we send the notification message
     // to other clients, we need to add the ID, so they know which client logged in.
-    AppMessage new_msg(AppMessageType::UserLoggedIn);
-    new_msg << client_id << username;
+    json new_msg;
+    new_msg["type"] = AppMessageType::UserLoggedIn;
+    new_msg["user_id"] = client_id;
+    new_msg["username"] = username;
 
     // Finally, inform the other users about the new user.
     sendMessageToAllUsers(new_msg, client_id);
@@ -166,23 +86,24 @@ void MessengerServer::onClientMessageReceived(
   else if (msg_type == AppMessageType::UserSentMessage)
   {
     // Obtain the receiving client ID and message.
-    int client_to;
-    std::string msg;
-    app_msg >> client_to >> msg;
+    const auto client_to = app_msg["user_id"].get<int>();
+    const auto msg = app_msg["message"].get<std::string>();
 
     // Create a new message with the sender client ID and message.
     const int client_from = client_id;
-    AppMessage new_msg(AppMessageType::UserSentMessage);
-    new_msg << client_from << msg;
+    json new_msg; 
+    new_msg["type"] = AppMessageType::UserSentMessage;
+    new_msg["user_id"] = client_from;
+    new_msg["message"] = msg;
 
     // Send new message to the receiving client.
-    sendMessageToClient(client_to, serialize(new_msg));
+    sendMessageToClient(client_to, new_msg.dump());
   }
 }
 
-void MessengerServer::sendMessageToAllUsers(AppMessage const& msg, std::optional<int> opt_ignore_id)
+void MessengerServer::sendMessageToAllUsers(json const& msg, std::optional<int> opt_ignore_id)
 {
-  const auto serialized_msg = serialize(msg);
+  const auto serialized_msg = msg.dump();
   for (auto const& user : current_users_)
   {
     if (opt_ignore_id && *opt_ignore_id == user.id) 
@@ -197,34 +118,31 @@ MessengerClient::MessengerClient(
   Client(ip_str, port_str)
 {}
 
-void MessengerClient::sendMessage(AppMessage const& msg)
+void MessengerClient::sendMessage(json const& msg)
 {
-  sendMessageToServer(serialize(msg));
+  sendMessageToServer(msg.dump());
 }
 
 void MessengerClient::onServerMessageReceived(std::string const& data)
 {
-  auto app_msg = deserialize(data);
+  const auto app_msg = json::parse(data);
 
-  auto const msg_t = app_msg.type();
+  auto const msg_t = app_msg["type"].get<AppMessageType>();
   if (msg_t == AppMessageType::UserLoggedIn)
   {
-    int user_id;
-    std::string user_name;
-    app_msg >> user_id >> user_name;
+    const auto user_id = app_msg["user_id"].get<int>();
+    const auto user_name = app_msg["username"].get<std::string>();
     onUserLoggedIn(user_id, user_name);
   }
   else if (msg_t == AppMessageType::UserLoggedOut)
   {
-    int user_id;
-    app_msg >> user_id;
+    const auto user_id = app_msg["user_id"].get<int>();
     onUserLoggedOut(user_id);
   }
   else if (msg_t == AppMessageType::UserSentMessage)
   {
-    int user_id;
-    std::string user_msg;
-    app_msg >> user_id >> user_msg;
+    const auto user_id = app_msg["user_id"].get<int>();
+    const auto user_msg = app_msg["message"].get<std::string>();
     onUserMessageReceived(user_id, user_msg);
   }
 }
@@ -244,61 +162,3 @@ void MessengerClient::onUserLoggedOut(int user_id)
 void MessengerClient::onUserMessageReceived(int user_id, std::string const& msg)
 {
 }
-
-bool are_same(AppMessage const& one, AppMessage const& other)
-{
-  return (one.type() == other.type()) && (one.data() == other.data());
-}
-
-void test_case(std::string const& test_name, AppMessage const& msg)
-{
-  auto const serialized = serialize(msg);
-  auto const deserialized = deserialize(serialized);
-  const bool same = are_same(msg, deserialized);
-  std::cout << test_name << ": " << (same ? "Success" : "Failure") << std::endl;
-}
-
-void test_message_serialization()
-{
-  {
-    AppMessage msg(AppMessageType::UserLoggedIn);
-    test_case("Case 1", msg);
-  }
-
-  {
-    AppMessage msg(AppMessageType::UserLoggedOut);
-    test_case("Case 2", msg);
-  }
-
-  {
-    auto const data = std::to_string(1);
-    AppMessage msg(AppMessageType::UserLoggedIn, data);
-    test_case("Case 3", msg);
-  }
-
-  {
-    auto const data = "User message.";
-    AppMessage msg(AppMessageType::UserSentMessage, data);
-    test_case("Case 4", msg);
-  }
-}
-
-void test_message_streaming()
-{
-  AppMessage msg(AppMessageType::UserLoggedIn);
-  int a = 4;
-  bool b = true;
-  float c = 7.f;
-  std::string s = "Foo";
-  msg << a << b << c << s;
-  
-  int a1;
-  bool b1;
-  float c1;
-  std::string s1;
-  msg >> a1 >> b1 >> c1 >> s1;
-
-  const bool same = a == a1 && b == b1 && c == c1 && s == s1;
-  std::cout << "Streaming test" << ": " << (same ? "Success" : "Failure") << std::endl;
-}
-

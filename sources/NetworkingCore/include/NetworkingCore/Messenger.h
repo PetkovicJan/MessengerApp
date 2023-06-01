@@ -4,9 +4,13 @@
 #include "Client.h"
 #include "UsersDB.h"
 
+#include <nlohmann/json.hpp>
+
 #include <thread>
 #include <mutex>
 #include <atomic>
+
+using json = nlohmann::json;
 
 enum class AppMessageType { UserSentMessage, UserLoggedIn, UserLoggedOut };
 
@@ -15,90 +19,6 @@ struct User
   int id;
   std::string name;
 };
-
-class AppMessage
-{
-public:
-  explicit AppMessage(
-    AppMessageType type, 
-    std::optional<std::string> const& opt_data = std::nullopt);
-
-  AppMessageType type() const;
-
-  std::string data() const;
-
-  template<typename DataT>
-  friend AppMessage& operator << (AppMessage& msg, DataT const& put_data);
-
-  template<typename DataT>
-  friend AppMessage& operator >> (AppMessage& msg, DataT& take_data);
-
-private:
-  struct MessageHeader
-  {
-    AppMessageType type;
-
-    // Size of the message in bytes *including the size of the header*.
-    int size;
-  };
-
-  MessageHeader header_;
-  std::string data_;
-
-  friend std::string serialize(AppMessage const&);
-  friend AppMessage deserialize(std::string const&);
-};
-
-template<typename DataT>
-AppMessage& operator<<(AppMessage& msg, DataT const& put_data)
-{
-  static_assert(std::is_standard_layout_v<DataT>);
-
-  auto& data = msg.data_;
-
-  auto const curr_sz = data.size();
-  auto const put_data_sz = sizeof(DataT);
-  data.resize(curr_sz + put_data_sz);
-
-  std::memcpy(data.data() + curr_sz, &put_data, put_data_sz);
-
-  // Finally change the size of the message in the header.
-  msg.header_.size += put_data_sz;
-
-  return msg;
-}
-
-template<typename DataT>
-AppMessage& operator>>(AppMessage& msg, DataT& take_data)
-{
-  static_assert(std::is_standard_layout_v<DataT>);
-
-  auto& data = msg.data_;
-
-  auto const curr_sz = data.size();
-  auto const take_data_sz = sizeof(DataT);
-  auto const new_sz = curr_sz - take_data_sz;
-
-  std::memcpy(&take_data, data.data(), take_data_sz);
-
-  data = data.substr(take_data_sz, new_sz);
-
-  // Finally change the size of the message in the header.
-  msg.header_.size -= take_data_sz;
-
-  return msg;
-}
-
-// Add template specialization for strings. Note that in case of reading 
-// a string from message, we choose to simply take the whole string, since 
-// we don't know how long it should be.
-template<>
-AppMessage& operator<<(AppMessage& msg, std::string const& put_data);
-template<>
-AppMessage& operator>>(AppMessage& msg, std::string& take_data);
-
-void test_message_serialization();
-void test_message_streaming();
 
 class MessengerServer : public Server
 {
@@ -111,7 +31,7 @@ private:
   void onClientDisconnected(int client_id) override;
   void onClientMessageReceived(int client_id, std::string const& msg) override;
 
-  void sendMessageToAllUsers(AppMessage const& msg, std::optional<int> opt_ignore_id = std::nullopt);
+  void sendMessageToAllUsers(json const& msg, std::optional<int> opt_ignore_id = std::nullopt);
 
   // Users, that are currently logged in.
   std::vector<User> current_users_;
@@ -126,7 +46,7 @@ public:
   explicit MessengerClient(
     std::string const& ip_str, std::string const& port_str);
 
-  void sendMessage(AppMessage const& msg);
+  void sendMessage(json const& msg);
 
 private:
   virtual void onServerMessageReceived(std::string const& msg) override;
