@@ -9,11 +9,9 @@ MessengerServer::MessengerServer(
   Server(ip_str, port_str, max_num_clients), users_db_("users.db")
 {
 #ifdef ADD_DEFAULT_USERS
-  users_db_.addUser({ "Jan", "jan123" });
-  users_db_.addUser({ "Nika", "nika345" });
-  users_db_.addUser({ "Bor", "bor678" });
-  //users_db_.getUser("Jan");
-  //users_db_.getUser("Bor");
+  users_db_.addUser({ "user1", "abc123" });
+  users_db_.addUser({ "user2", "def456" });
+  users_db_.addUser({ "user3", "ghi789" });
 #endif
 }
 
