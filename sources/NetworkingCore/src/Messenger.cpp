@@ -49,10 +49,9 @@ void MessengerServer::onClientMessageReceived(
   int client_id, std::string const& msg_str)
 {
   const auto app_msg = json::parse(msg_str);
-  const auto msg_type = app_msg["type"].get<AppMessageType>();
-
   std::cout << "Server::onClientMessageReceived: " << app_msg << '\n';
 
+  const auto msg_type = app_msg["type"].get<AppMessageType>();
   if (msg_type == AppMessageType::UserLoggedIn)
   {
     // First notify the new user of all users, that are currently logged in.
@@ -126,6 +125,7 @@ void MessengerClient::sendMessage(json const& msg)
 void MessengerClient::onServerMessageReceived(std::string const& data)
 {
   const auto app_msg = json::parse(data);
+  std::cout << "Client::onServerMessageReceived: " << app_msg << '\n';
 
   auto const msg_t = app_msg["type"].get<AppMessageType>();
   if (msg_t == AppMessageType::UserLoggedIn)
