@@ -3,10 +3,10 @@
 
 #include <QKeyEvent>
 #include <QLayout>
-#include <QStackedWidget>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QMessageBox>
 
 #include <iostream>
 
@@ -32,21 +32,38 @@ MessengerAppWidget::MessengerAppWidget(QWidget* parent) : QWidget(parent)
 
   auto username_label = new QLabel("Username: ");
   auto username_edit = new QLineEdit();
-  auto confirm_button = new QPushButton("Log in!");
+  auto password_label = new QLabel("Password: ");
+  auto password_edit = new QLineEdit();
+  password_edit->setEchoMode(QLineEdit::Password);
+  auto confirm_button = new QPushButton("Log in");
 
-  auto content_layout = new QHBoxLayout();
+  auto sign_up_label = new QLabel("Don't have an account?");
+  auto sign_up_button = new QPushButton("Sign up");
+
+  auto log_in_layout = new QGridLayout();
+  log_in_layout->addWidget(username_label, 0, 0);
+  log_in_layout->addWidget(username_edit, 0, 1);
+  log_in_layout->addWidget(password_label, 1, 0);
+  log_in_layout->addWidget(password_edit, 1, 1);
+  log_in_layout->addWidget(confirm_button, 2, 1, Qt::AlignRight);
+
+  auto sign_up_layout = new QHBoxLayout();
+  sign_up_layout->addWidget(sign_up_label);
+  sign_up_layout->addWidget(sign_up_button);
+
+  auto content_layout = new QVBoxLayout();
   content_layout->addStretch();
-  content_layout->addWidget(username_label);
-  content_layout->addWidget(username_edit);
-  content_layout->addWidget(confirm_button);
+  content_layout->addLayout(log_in_layout);
+  content_layout->addStretch();
+  content_layout->addLayout(sign_up_layout);
   content_layout->addStretch();
 
-  auto vertical_layout = new QHBoxLayout();
-  vertical_layout->addStretch();
-  vertical_layout->addLayout(content_layout);
-  vertical_layout->addStretch();
+  auto center_layout = new QHBoxLayout();
+  center_layout->addStretch();
+  center_layout->addLayout(content_layout);
+  center_layout->addStretch();
 
-  entrance_widget->setLayout(vertical_layout);
+  entrance_widget->setLayout(center_layout);
 
   // Create main widget.
   auto main_widget = new QWidget();
@@ -74,29 +91,27 @@ MessengerAppWidget::MessengerAppWidget(QWidget* parent) : QWidget(parent)
   main_widget->setLayout(main_layout);
 
   // Create stacked widget.
-  auto stacked_widget = new QStackedWidget();
-  stacked_widget->addWidget(entrance_widget);
-  stacked_widget->addWidget(main_widget);
+  stacked_widget_ = new QStackedWidget();
+  stacked_widget_->addWidget(entrance_widget);
+  stacked_widget_->addWidget(main_widget);
 
   auto layout = new QHBoxLayout();
-  layout->addWidget(stacked_widget);
+  layout->addWidget(stacked_widget_);
   this->setLayout(layout);
 
   // Make connections.
 
   // On login button clicked.
   QObject::connect(confirm_button, &QPushButton::clicked, 
-    [this, stacked_widget, main_widget, username_edit]() 
+    [this, username_edit, password_edit]() 
     {
-      // Set the username.
+      // Read username and password.
       const auto username = username_edit->text();
+      const auto password = password_edit->text();
       username_ = username;
 
-      // Switch from login widget to the main widget.
-      stacked_widget->setCurrentWidget(main_widget);
-
       // Notify the world about the login.
-      emit userLoggedIn(username);
+      emit userLoggedIn(username, password);
     });
 
   // On user selected (from users list).
@@ -154,6 +169,25 @@ void MessengerAppWidget::setUserMessage(int id, QString const& message)
 
   const auto user_dialog = user_dialogs_.at(id);
   detail::appendStringToStringListModel(user_dialog, text);
+}
+
+void MessengerAppWidget::enterMainWidget()
+{
+  stacked_widget_->setCurrentIndex(1);
+}
+
+void MessengerAppWidget::displayInvalidUsernameMessage()
+{
+  QMessageBox msg;
+  msg.setText("Entered username is not registered.");
+  msg.exec();
+}
+
+void MessengerAppWidget::displayInvalidPasswordMessage()
+{
+  QMessageBox msg;
+  msg.setText("Entered password is not valid.");
+  msg.exec();
 }
 
 bool MessengerAppWidget::eventFilter(QObject* obj, QEvent* event)

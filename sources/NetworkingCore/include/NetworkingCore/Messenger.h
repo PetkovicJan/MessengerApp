@@ -12,7 +12,9 @@
 
 using json = nlohmann::json;
 
-enum class AppMessageType { UserSentMessage, UserLoggedIn, UserLoggedOut };
+enum class AppMessageType { UserLoggedIn, UserLoggedOut, UserSentMessage, UserLoginStatus };
+
+enum class LoginStatus { Success, InvalidUsername, InvalidPassword };
 
 struct User
 {
@@ -55,4 +57,5 @@ private:
   virtual void onUserLoggedIn(int user_id, std::string const& username);
   virtual void onUserLoggedOut(int user_id);
   virtual void onUserMessageReceived(int user_id, std::string const& msg);
+  virtual void onLoginStatusReceived(LoginStatus status);
 };

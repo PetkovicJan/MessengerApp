@@ -52,7 +52,36 @@ void MessengerServer::onClientMessageReceived(
   const auto msg_type = app_msg["type"].get<AppMessageType>();
   if (msg_type == AppMessageType::UserLoggedIn)
   {
-    // First notify the new user of all users, that are currently logged in.
+    const auto username = app_msg["username"].get<std::string>();
+    const auto password = app_msg["password"].get<std::string>();
+
+    // First authenticate the user.
+    const auto user = users_db_.getUser(username);
+    if (!user.has_value())
+    {
+      json login_msg;
+      login_msg["type"] = AppMessageType::UserLoginStatus;
+      login_msg["status"] = LoginStatus::InvalidUsername;
+      sendMessageToClient(client_id, login_msg.dump());
+      return;
+    }
+
+    if (user->password != password)
+    {
+      json login_msg;
+      login_msg["type"] = AppMessageType::UserLoginStatus;
+      login_msg["status"] = LoginStatus::InvalidPassword;
+      sendMessageToClient(client_id, login_msg.dump());
+      return;
+    }
+
+    // Authentication succeeded, notify the user.
+    json login_msg;
+    login_msg["type"] = AppMessageType::UserLoginStatus;
+    login_msg["status"] = LoginStatus::Success;
+    sendMessageToClient(client_id, login_msg.dump());
+
+    // Then notify the new user of all users, that are currently logged in.
     for (const auto& user : current_users_)
     {
       // Create a logged in message.
@@ -62,9 +91,6 @@ void MessengerServer::onClientMessageReceived(
       notify_msg["username"] = user.name;
       sendMessageToClient(client_id, notify_msg.dump());
     }
-
-    // Then obtain the username of the logged in client.
-    const auto username = app_msg["username"].get<std::string>();
 
     // Update the current users.
     current_users_.push_back({ client_id, username });
@@ -143,6 +169,11 @@ void MessengerClient::onServerMessageReceived(std::string const& data)
     const auto user_msg = app_msg["message"].get<std::string>();
     onUserMessageReceived(user_id, user_msg);
   }
+  else if (msg_t == AppMessageType::UserLoginStatus)
+  {
+    const auto status = app_msg["status"].get<LoginStatus>();
+    onLoginStatusReceived(status);
+  }
 }
 
 void MessengerClient::onDisconnectedFromServer()
@@ -158,5 +189,9 @@ void MessengerClient::onUserLoggedOut(int user_id)
 }
 
 void MessengerClient::onUserMessageReceived(int user_id, std::string const& msg)
+{
+}
+
+void MessengerClient::onLoginStatusReceived(LoginStatus status)
 {
 }

@@ -6,6 +6,7 @@
 #include <QListView>
 #include <QTextEdit>
 #include <QStringListModel>
+#include <QStackedWidget>
 
 #include <optional>
 
@@ -21,8 +22,14 @@ public:
 
   void setUserMessage(int id, QString const& message);
 
+  void enterMainWidget();
+
+  void displayInvalidUsernameMessage();
+
+  void displayInvalidPasswordMessage();
+
 signals:
-  void userLoggedIn(QString const& username);
+  void userLoggedIn(QString const& username, QString const& password);
 
   void sendMessageToUser(int id, QString const& message);
 
@@ -34,6 +41,8 @@ private:
   std::optional<std::pair<int, QString>> getCurrentlySelectedUser() const;
 
   QString username_;
+
+  QStackedWidget* stacked_widget_ = nullptr;
 
   QListView* users_list_view_ = nullptr;
   UsersModel* users_model_ = nullptr;
