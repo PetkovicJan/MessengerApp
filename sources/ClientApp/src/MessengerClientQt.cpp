@@ -26,6 +26,12 @@ void MessengerClientQt::onUserMessageReceived(int user_id, std::string const& ms
   emit userMessageReceived(user_id, QString::fromStdString(msg));
 }
 
+void MessengerClientQt::onUserCreatedStatusReceived(CreateStatus status)
+{
+  std::cout << "Client::onUserCreatedStatusReceived: " << static_cast<int>(status) << '\n';
+  emit userCreatedStatusReceived(status);
+}
+
 void MessengerClientQt::onLoginStatusReceived(LoginStatus status)
 {
   std::cout << "Client::onLoginStatusReceived: " << static_cast<int>(status) << '\n';

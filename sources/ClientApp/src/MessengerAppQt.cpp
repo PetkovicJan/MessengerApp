@@ -1,5 +1,6 @@
 #include <ClientApp/MessengerAppQt.h>
 #include <ClientApp/UsersModelQt.h>
+#include <ClientApp/SignUpDialogQt.h>
 
 #include <QKeyEvent>
 #include <QLayout>
@@ -114,6 +115,21 @@ MessengerAppWidget::MessengerAppWidget(QWidget* parent) : QWidget(parent)
       emit userLoggedIn(username, password);
     });
 
+  // On sign up button clicked.
+  QObject::connect(sign_up_button, &QPushButton::clicked, 
+    [this]() 
+    {
+      SignUpDialogQt sign_up_dialog(this);
+      if (sign_up_dialog.exec() == QDialog::Accepted)
+      {
+        // Obtain username and password.
+        const auto [username, password] = sign_up_dialog.getUsernameAndPassword();
+        
+        // Notify the world about the new account.
+        emit newUserCreated(username, password);
+      }
+    });
+
   // On user selected (from users list).
   const auto selection_model = users_list_view_->selectionModel();
   QObject::connect(selection_model, &QItemSelectionModel::currentChanged, 
@@ -187,6 +203,20 @@ void MessengerAppWidget::displayInvalidPasswordMessage()
 {
   QMessageBox msg;
   msg.setText("Entered password is not valid.");
+  msg.exec();
+}
+
+void MessengerAppWidget::displayUserCreatedSuccess()
+{
+  QMessageBox msg;
+  msg.setText("New user created successfully.");
+  msg.exec();
+}
+
+void MessengerAppWidget::displayUserCreatedFailure()
+{
+  QMessageBox msg;
+  msg.setText("Failed to create new user.");
   msg.exec();
 }
 

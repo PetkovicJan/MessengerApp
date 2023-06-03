@@ -38,6 +38,17 @@ int main(int argc, char* argv[]) {
     });
 #else
   // Handle events from the client side.
+  QObject::connect(main_widget, &MessengerAppWidget::newUserCreated, 
+    [&client](QString const& username, QString const& password) 
+    {
+      json login_msg;
+      login_msg["type"] = AppMessageType::UserCreated;
+      login_msg["username"] = username.toStdString();
+      login_msg["password"] = password.toStdString();
+
+      client.sendMessage(login_msg);
+    });
+
   QObject::connect(main_widget, &MessengerAppWidget::userLoggedIn, 
     [&client](QString const& username, QString const& password) 
     {
@@ -76,6 +87,14 @@ int main(int argc, char* argv[]) {
         main_widget->displayInvalidUsernameMessage();
       else if (status == LoginStatus::InvalidPassword)
         main_widget->displayInvalidPasswordMessage();
+    });
+  QObject::connect(&client, &MessengerClientQt::userCreatedStatusReceived, main_widget,
+    [main_widget](CreateStatus status)
+    {
+      if (status == CreateStatus::Success)
+        main_widget->displayUserCreatedSuccess();
+      else if (status == CreateStatus::Failure)
+        main_widget->displayUserCreatedFailure();
     });
 #endif
 

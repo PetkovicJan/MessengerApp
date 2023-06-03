@@ -50,7 +50,29 @@ void MessengerServer::onClientMessageReceived(
   std::cout << "Server::onClientMessageReceived: " << app_msg << '\n';
 
   const auto msg_type = app_msg["type"].get<AppMessageType>();
-  if (msg_type == AppMessageType::UserLoggedIn)
+  if (msg_type == AppMessageType::UserCreated)
+  {
+    const auto username = app_msg["username"].get<std::string>();
+    const auto password = app_msg["password"].get<std::string>();
+
+    // Add user to database.
+    UserData user{ username, password };
+    if (users_db_.addUser(user))
+    {
+      json user_created_msg;
+      user_created_msg["type"] = AppMessageType::UserCreatedStatus;
+      user_created_msg["status"] = CreateStatus::Success;
+      sendMessageToClient(client_id, user_created_msg.dump());
+    }
+    else
+    {
+      json user_created_msg;
+      user_created_msg["type"] = AppMessageType::UserCreatedStatus;
+      user_created_msg["status"] = CreateStatus::Failure;
+      sendMessageToClient(client_id, user_created_msg.dump());
+    }
+  }
+  else if (msg_type == AppMessageType::UserLoggedIn)
   {
     const auto username = app_msg["username"].get<std::string>();
     const auto password = app_msg["password"].get<std::string>();
@@ -169,6 +191,11 @@ void MessengerClient::onServerMessageReceived(std::string const& data)
     const auto user_msg = app_msg["message"].get<std::string>();
     onUserMessageReceived(user_id, user_msg);
   }
+  if (msg_t == AppMessageType::UserCreatedStatus)
+  {
+    const auto status = app_msg["status"].get<CreateStatus>();
+    onUserCreatedStatusReceived(status);
+  }
   else if (msg_t == AppMessageType::UserLoginStatus)
   {
     const auto status = app_msg["status"].get<LoginStatus>();
@@ -189,6 +216,10 @@ void MessengerClient::onUserLoggedOut(int user_id)
 }
 
 void MessengerClient::onUserMessageReceived(int user_id, std::string const& msg)
+{
+}
+
+void MessengerClient::onUserCreatedStatusReceived(CreateStatus status)
 {
 }
 

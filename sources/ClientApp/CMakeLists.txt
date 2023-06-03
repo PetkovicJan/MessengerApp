@@ -8,7 +8,8 @@ set(HPP_DIR ${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME})
 set(HPP_FILES 
   ${HPP_DIR}/MessengerAppQt.h
   ${HPP_DIR}/MessengerClientQt.h
-  ${HPP_DIR}/UsersModelQt.h)
+  ${HPP_DIR}/UsersModelQt.h
+  ${HPP_DIR}/SignUpDialogQt.h)
 
 # Set source files.
 set(CPP_DIR ${PROJECT_SOURCE_DIR}/src)
@@ -16,7 +17,8 @@ set(CPP_FILES
   ${CPP_DIR}/main.cpp
   ${CPP_DIR}/MessengerAppQt.cpp
   ${CPP_DIR}/MessengerClientQt.cpp
-  ${CPP_DIR}/UsersModelQt.cpp)
+  ${CPP_DIR}/UsersModelQt.cpp
+  ${CPP_DIR}/SignUpDialogQt.cpp)
 
 # Add the executable.
 add_executable(${PROJECT_NAME} ${CPP_FILES} ${HPP_FILES})

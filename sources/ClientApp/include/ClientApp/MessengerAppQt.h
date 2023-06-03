@@ -17,7 +17,6 @@ public:
   explicit MessengerAppWidget(QWidget* parent = nullptr);
 
   void addUser(int id, QString const& name);
-
   void removeUser(int id);
 
   void setUserMessage(int id, QString const& message);
@@ -25,12 +24,14 @@ public:
   void enterMainWidget();
 
   void displayInvalidUsernameMessage();
-
   void displayInvalidPasswordMessage();
 
-signals:
-  void userLoggedIn(QString const& username, QString const& password);
+  void displayUserCreatedSuccess();
+  void displayUserCreatedFailure();
 
+signals:
+  void newUserCreated(QString const& username, QString const& password);
+  void userLoggedIn(QString const& username, QString const& password);
   void sendMessageToUser(int id, QString const& message);
 
 private:
