@@ -23,13 +23,20 @@ int main(int argc, char* argv[]) {
   // The deletion of this object is taken care by the Qt system.
   auto main_widget = new MessengerAppWidget();
 #ifdef DEBUG
-  main_widget->addUser(0, "A");
-  main_widget->addUser(1, "B");
-  main_widget->addUser(2, "C");
+  main_widget->addUser(0, "user1");
+  main_widget->addUser(1, "user2");
+  main_widget->addUser(2, "user3");
 #endif
 
-#ifndef DEBUG
-
+#ifdef DEBUG
+  // In debug mode, enter main widget on login request without any authentication 
+  // on the server side, since we are not connected to it at all.
+  QObject::connect(main_widget, &MessengerAppWidget::userLoggedIn, 
+    [main_widget](QString const& username, QString const& password) 
+    {
+      main_widget->enterMainWidget();
+    });
+#else
   // Handle events from the client side.
   QObject::connect(main_widget, &MessengerAppWidget::userLoggedIn, 
     [&client](QString const& username, QString const& password) 
@@ -70,7 +77,6 @@ int main(int argc, char* argv[]) {
       else if (status == LoginStatus::InvalidPassword)
         main_widget->displayInvalidPasswordMessage();
     });
-
 #endif
 
   QMainWindow main_window;
