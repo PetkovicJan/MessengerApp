@@ -4,6 +4,8 @@
 #include <ClientApp/MessengerAppQt.h>
 #include <ClientApp/MessengerClientQt.h>
 
+#include <iostream>
+
 //#define DEBUG
 
 int main(int argc, char* argv[]) {
@@ -19,7 +21,16 @@ int main(int argc, char* argv[]) {
 
 #ifndef DEBUG
   MessengerClientQt client(ip_str, port_num_str);
-  std::thread client_thread([&client]() { client.exec(); });
+  std::thread client_thread([&client]() { 
+    try
+    {
+      client.exec();
+    }
+    catch (std::exception const& e)
+    {
+      std::cout << "Exception was caught in client: " << e.what() << '\n';
+    }
+    });
 #endif
 
   QApplication a(argc, argv);
@@ -107,7 +118,14 @@ int main(int argc, char* argv[]) {
   main_window.move(200, 200);
   main_window.show();
 
-  a.exec();
+  try
+  {
+    a.exec();
+  }
+  catch (std::exception const& e)
+  {
+    std::cout << "Exception was caught in GUI application: " << e.what() << '\n';
+  }
 
 #ifndef DEBUG
   // Detach from server if app was exited.

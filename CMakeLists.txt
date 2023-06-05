@@ -14,10 +14,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(JSON_BuildTests OFF CACHE INTERNAL "")
 set(JSON_Install OFF CACHE INTERNAL "")
 
+# Add external dependencies.
 add_subdirectory(${PROJECT_SOURCE_DIR}/ext/json)
 add_subdirectory(${PROJECT_SOURCE_DIR}/ext/sqlite)
+add_subdirectory(${PROJECT_SOURCE_DIR}/ext/googletest)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/sources/NetworkingCore)
 add_subdirectory(${PROJECT_SOURCE_DIR}/sources/ServerApp)
 add_subdirectory(${PROJECT_SOURCE_DIR}/sources/ClientApp)
-
