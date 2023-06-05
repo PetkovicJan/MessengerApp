@@ -32,3 +32,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 # Link libraries.
 set(LIBRARIES Ws2_32.lib nlohmann_json::nlohmann_json sqlite)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRARIES})
+
+# Add tests.
+add_executable(tests tests/tests.cpp)
+target_link_libraries(tests PRIVATE GTest::gtest_main)
