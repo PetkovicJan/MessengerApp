@@ -7,6 +7,10 @@
 //#define DEBUG
 
 int main(int argc, char* argv[]) {
+
+  qRegisterMetaType<LoginStatus>("LoginStatus");
+  qRegisterMetaType<CreateStatus>("ProcessHandle");
+
   // This machine's IP.
   auto const ip_str = "127.0.0.1";
 
