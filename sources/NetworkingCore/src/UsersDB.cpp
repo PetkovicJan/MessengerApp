@@ -73,11 +73,6 @@ std::optional<UserData> UsersDB::getUser(std::string const& name)
         user->password = column_strings[i];
     }
 
-    for (int i = 0; i < column_count; ++i)
-    {
-      std::cout << column_names[i] << ": " << column_strings[i] << '\n';
-    }
-
     return SQLITE_OK;
   };
 
