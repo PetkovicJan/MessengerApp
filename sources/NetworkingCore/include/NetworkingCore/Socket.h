@@ -4,6 +4,7 @@
 #include <WS2tcpip.h>
 
 #include <string>
+#include <vector>
 #include <optional>
 
 enum class SocketType { Server, Client };
@@ -56,6 +57,18 @@ public:
 
 private:
   SOCKET socket_ = INVALID_SOCKET;
+};
+
+// Class for message building using message length prefix.
+class MessageBuilder
+{
+public:
+  std::vector<std::string> build(std::string const& data);
+
+private:
+  bool msg_started_ = false;
+  int32_t msg_sz_ = 0;
+  std::string msg_;
 };
 
 class ConnectedSocket

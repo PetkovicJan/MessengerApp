@@ -89,6 +89,66 @@ bool BareSocket::isValid() const
   return socket_ != INVALID_SOCKET;
 }
 
+std::vector<std::string> MessageBuilder::build(std::string const& data)
+{
+  auto msg_begin = data.begin();
+
+  if (!msg_started_)
+  {
+    // This is a must! If this data is supposed to start a new message,
+    // it must be at least 4 bytes long, so that we obtain the message
+    // size in full. This is only true in current implementation.
+    if (data.size() < 4)
+      throw std::runtime_error("Received data for new message must be at least 4 bytes long.");
+
+    // First 4 bytes must correspond to the length of the message.
+    std::memcpy(&msg_sz_, data.data(), 4);
+
+    msg_begin += 4;
+
+    msg_started_ = true;
+  }
+
+  const auto msg_sz = data.end() - msg_begin;
+  const auto curr_sz = msg_.size();
+
+  const auto sz_missing = msg_sz_ - curr_sz;
+  if (sz_missing > msg_sz)
+  {
+    // There is not enough data to complete the message. Just append the current data and return nullopt.
+    msg_.append(msg_begin, data.end());
+    return {};
+  }
+  else
+  {
+    // Create complete message.
+    const auto curr_msg_end = msg_begin + sz_missing;
+    auto complete_msg = msg_;
+    complete_msg.append(msg_begin, curr_msg_end);
+
+    // Reset all the members.
+    msg_started_ = false;
+    msg_sz_ = 0;
+    msg_.clear();
+
+    // If we used up all the data, then just return the result.
+    if (curr_msg_end == data.end())
+    {
+      return { complete_msg };
+    }
+    
+    // Recursively call this function on the remaining data.
+    std::string remaining_data;
+    remaining_data.append(curr_msg_end, data.end());
+    auto all_msgs = build(remaining_data);
+
+    // Insert the first message at the begining to preserve the order.
+    all_msgs.insert(all_msgs.begin(), complete_msg);
+
+    return all_msgs;
+  }
+}
+
 ConnectedSocket::ConnectedSocket(Address const& address) : 
   socket_(address.family(), address.socket_type(), address.protocol())
 {
