@@ -89,6 +89,22 @@ bool BareSocket::isValid() const
   return socket_ != INVALID_SOCKET;
 }
 
+std::string MessageBuilder::prefix_with_length(std::string const& data)
+{
+  int32_t len = data.size();
+
+  // Create copy of the string with prefixed length.
+  std::string prefixed;
+  prefixed.resize(len + 4);
+  // Copy the string.
+  data.copy(prefixed.data() + 4, len);
+  // Prefix with length.
+  // First 4 bytes must correspond to the length of the message.
+  std::memcpy(prefixed.data(), &len, 4);
+
+  return prefixed;
+}
+
 std::vector<std::string> MessageBuilder::build(std::string const& data)
 {
   auto msg_begin = data.begin();
@@ -176,13 +192,14 @@ ConnectedSocket::~ConnectedSocket()
 
 void ConnectedSocket::send(std::string const& data) const
 {
-  const int num_bytes = data.size();
-  const int result = ::send(socket_.handle(), data.data(), num_bytes, 0);
+  const auto prefixed = MessageBuilder::prefix_with_length(data);
+  const int num_bytes = prefixed.size();
+  const int result = ::send(socket_.handle(), prefixed.data(), num_bytes, 0);
   if (result == SOCKET_ERROR)
     throw std::runtime_error("Send failed.");
 }
 
-std::optional<std::string> ConnectedSocket::try_receive() const
+std::optional<std::vector<std::string>> ConnectedSocket::try_receive() const
 {
   // Check the read status of the socket.
   fd_set read_set;
@@ -194,7 +211,7 @@ std::optional<std::string> ConnectedSocket::try_receive() const
 
   // If not ready after timeout, return early.
   if (select(0, &read_set, NULL, NULL, &time_interval) == 0)
-    return std::nullopt;
+    return std::vector<std::string>();
 
   // The socket is ready, read out the data.
   const int buff_size = 512;
@@ -207,10 +224,11 @@ std::optional<std::string> ConnectedSocket::try_receive() const
     const int num_received = result;
     buffer.resize(num_received);
 
-    return buffer;
+    const auto messages = builder_.build(buffer);
+    return messages;
   }
   else
-    return std::string();
+    return std::nullopt;
 }
 
 ListeningSocket::ListeningSocket(Address const& address, int max_connections) : 

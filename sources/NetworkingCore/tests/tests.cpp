@@ -2,30 +2,11 @@
 
 #include <NetworkingCore/Socket.h>
 
-namespace detail
-{
-  std::string prefix_with_length(std::string const& data)
-  {
-    int32_t len = data.size();
-
-    // Create copy of the string with prefixed length.
-    std::string prefixed;
-    prefixed.resize(len + 4);
-    // Copy the string.
-    data.copy(prefixed.data() + 4, len);
-    // Prefix with length.
-    // First 4 bytes must correspond to the length of the message.
-    std::memcpy(prefixed.data(), &len, 4);
-
-    return prefixed;
-  }
-}
-
 TEST(MessageBuilderTest, HandlesOneCompleteMessage) 
 {
   // First create a message prefixed with length.
   const std::string message = "Hello World!";
-  const auto prefixed = detail::prefix_with_length(message);
+  const auto prefixed = MessageBuilder::prefix_with_length(message);
 
   // Build a message with builder.
   MessageBuilder builder;
@@ -46,7 +27,7 @@ TEST(MessageBuilderTest, HandlesMultipleCompleteMessagesOneByOne)
   for (const auto msg : messages)
   {
     // Create message with length prefix.
-    const auto prefixed = detail::prefix_with_length(msg);
+    const auto prefixed = MessageBuilder::prefix_with_length(msg);
 
     // Build message with builder.
     const auto built_messages = builder.build(prefixed);
@@ -65,7 +46,7 @@ TEST(MessageBuilderTest, HandlesMultipleCompleteMessagesAllAtOnce)
   std::string prefixed_data;
   for (const auto& msg : messages)
   {
-    auto prefixed = detail::prefix_with_length(msg);
+    auto prefixed = MessageBuilder::prefix_with_length(msg);
     prefixed_data.append(prefixed);
   }
 
@@ -87,7 +68,7 @@ TEST(MessageBuilderTest, HandlesOneMessageInTwoParts)
 {
   // First create a message prefixed with length.
   const std::string message = "Hello World!";
-  const auto prefixed = detail::prefix_with_length(message);
+  const auto prefixed = MessageBuilder::prefix_with_length(message);
 
   // Break message into two parts.
   const int break_point = prefixed.size() / 2;
@@ -112,7 +93,7 @@ TEST(MessageBuilderTest, HandlesOneMessageInMoreParts)
 {
   // First create a message prefixed with length.
   const std::string message = "This is a random string: !#$%?";
-  const auto prefixed = detail::prefix_with_length(message);
+  const auto prefixed = MessageBuilder::prefix_with_length(message);
 
   const std::vector<int> break_points = { 7, 14, 15, 24, 28 };
 

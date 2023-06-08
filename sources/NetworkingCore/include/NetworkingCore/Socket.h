@@ -63,6 +63,10 @@ private:
 class MessageBuilder
 {
 public:
+  static std::string prefix_with_length(std::string const& data);
+
+  // Build message from partial data. If any messages are completed with the input data,
+  // they are returned as the result. If no messages are built, the vector is empty.
   std::vector<std::string> build(std::string const& data);
 
 private:
@@ -84,10 +88,14 @@ public:
 
   void send(std::string const& data) const;
 
-  std::optional<std::string> try_receive() const;
+  // Returns all the obtained messages. If no messages are obtained, the vector is empty.
+  // If nullopt is returned, the connection is lost.
+  std::optional<std::vector<std::string>> try_receive() const;
 
 private:
   BareSocket socket_;
+
+  mutable MessageBuilder builder_;
 };
 
 class ListeningSocket

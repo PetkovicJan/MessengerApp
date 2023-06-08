@@ -37,15 +37,17 @@ void Connection::receivingService()
 {
   while (is_alive_)
   {
-    auto const msg = socket_.try_receive();
-    if (!msg.has_value()) continue;
+    auto const messages = socket_.try_receive();
 
-    if (msg->size() > 0)
-      message_queue_.push(Message{ MessageType::ClientMessage, unique_id_, *msg });
-    else
+    if (!messages.has_value())
     {
+      // Connection is lost.
       message_queue_.push(Message{ MessageType::ClientDisconnected, unique_id_, "" });
       is_alive_ = false;
+      break;
     }
+
+    for (const auto msg : *messages)
+      message_queue_.push(Message{ MessageType::ClientMessage, unique_id_, msg });
   }
 }

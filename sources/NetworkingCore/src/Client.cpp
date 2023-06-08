@@ -17,12 +17,15 @@ void Client::exec()
   is_alive_.store(true);
   while (is_alive_.load())
   {
-    auto const msg = server_->try_receive();
-    if (!msg.has_value()) continue;
+    auto const messages = server_->try_receive();
 
-    if (msg->size() == 0) break;
+    // Connection is lost.
+    if (!messages.has_value()) break;
 
-    onServerMessageReceived(*msg);
+    if (messages->size() == 0) continue;
+
+    for (const auto msg : *messages)
+      onServerMessageReceived(msg);
   }
 
   onDisconnectedFromServer();
