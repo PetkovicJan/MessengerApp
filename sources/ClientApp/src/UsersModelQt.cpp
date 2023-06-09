@@ -1,5 +1,9 @@
 #include <ClientApp/UsersModelQt.h>
 
+#include <QFont>
+
+#include <optional>
+
 UsersModel::UsersModel(QObject* parent) : QAbstractListModel(parent)
 {
 }
@@ -8,47 +12,44 @@ void UsersModel::addUser(int id, QString const& name)
 {
   const auto new_pos = users_.size();
   beginInsertRows(QModelIndex(), new_pos, new_pos);
-  users_.insert(new_pos, std::make_pair(id, name));
+  users_.push_back({ id, name, true });
   endInsertRows();
 }
 
 void UsersModel::removeUser(int id)
 {
-  // Find the item with the given ID.
-  int id_index = -1;
-  for (int i = 0; i < users_.size(); ++i)
-    if (users_.at(i).first == id)
+  auto it = std::find_if(users_.begin(), users_.end(),
+    [id](UserData const& data) 
     {
-      id_index = i;
-      break;
-    }
+      return data.id == id;
+    });
 
-  if (id_index == -1) return;
+  if (it == users_.end()) return;
 
-  beginRemoveRows(QModelIndex(), id_index, id_index);
-  users_.removeAt(id_index);
+  const auto row = std::distance(users_.begin(), it);
+
+  beginRemoveRows(QModelIndex(), row, row);
+  users_.erase(it);
   endRemoveRows();
 }
 
 QString UsersModel::getUserName(int id) const
 {
-  // Find the item with the given ID.
-  int id_index = -1;
-  for (int i = 0; i < users_.size(); ++i)
-    if (users_.at(i).first == id)
+  auto it = std::find_if(users_.begin(), users_.end(),
+    [id](UserData const& data) 
     {
-      id_index = i;
-      break;
-    }
+      return data.id == id;
+    });
 
-  if (id_index == -1) return "";
+  if (it == users_.end()) return "";
 
-  return users_.at(id_index).second;
+  return it->name;
 }
 
 std::pair<int, QString> UsersModel::getUserAt(int row) const
 {
-  return users_.at(row);
+  const auto& user = users_.at(row);
+  return std::make_pair(user.id, user.name);
 }
 
 int UsersModel::rowCount(QModelIndex const&) const
@@ -58,15 +59,26 @@ int UsersModel::rowCount(QModelIndex const&) const
 
 QVariant UsersModel::data(QModelIndex const& index, int role) const
 {
-  if (role != Qt::DisplayRole)
-    return QVariant();
-
   const int row = index.row();
-  const bool is_in_range = row >= 0 && row < users_.size();
-  if (!is_in_range)
-    return QVariant();
 
-  return users_.at(row).second;
+  // Check range.
+  if (row < 0 || row >= users_.size()) return QVariant();
+
+  const auto& user = users_.at(row);
+
+  if (role == Qt::DisplayRole)
+  {
+    return user.name;
+  }
+  else if (role == Qt::FontRole)
+  {
+    QFont font;
+    font.setBold(!user.checked);
+
+    return font;
+  }
+
+  return QVariant();
 }
 
 QVariant UsersModel::headerData(
@@ -81,7 +93,19 @@ QVariant UsersModel::headerData(
   return QString("Users");
 }
 
-QList<std::pair<int, QString>> UsersModel::getUsers() const
+void UsersModel::setChecked(int user_id, bool checked)
 {
-  return users_;
+  auto it = std::find_if(users_.begin(), users_.end(),
+    [user_id](UserData const& data) 
+    {
+      return data.id == user_id;
+    });
+
+  if (it == users_.end()) return;
+
+  it->checked = checked;
+
+  const auto row = std::distance(users_.begin(), it);
+  const auto index = this->index(row, 0);
+  emit dataChanged(index, index);
 }

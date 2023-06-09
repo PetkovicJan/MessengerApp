@@ -1,7 +1,8 @@
 #pragma once
 
 #include <QAbstractListModel>
-#include <QList>
+
+#include <vector>
 
 class UsersModel : public QAbstractListModel
 {
@@ -18,13 +19,20 @@ public:
 
   std::pair<int, QString> getUserAt(int row) const;
 
-  QList<std::pair<int, QString>> getUsers() const;
+  void setChecked(int user_id, bool checked);
 
 private:
+  // Virtual functions to override.
   int rowCount(QModelIndex const& index = QModelIndex()) const override;
   QVariant data(QModelIndex const& index, int role = Qt::DisplayRole) const override;
   QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
-private:
-  QList<std::pair<int, QString>> users_;
+  struct UserData
+  {
+    int id = -1;
+    QString name;
+    bool checked = false;
+  };
+
+  std::vector<UserData> users_;
 };

@@ -144,6 +144,7 @@ MessengerAppWidget::MessengerAppWidget(QWidget* parent) : QWidget(parent)
       {
         const auto [id, name] = users_model_->getUserAt(current_index.row());
         dialog_view_->setModel(user_dialogs_.at(id));
+        users_model_->setChecked(id, true);
       }
     });
 }
@@ -180,11 +181,19 @@ void MessengerAppWidget::removeUser(int id)
 
 void MessengerAppWidget::setUserMessage(int id, QString const& message)
 {
+  // Add message to the corresponding user dialog.
   const auto name = users_model_->getUserName(id);
   const auto text = name + QString(": ") + message;
 
   const auto user_dialog = user_dialogs_.at(id);
   detail::appendStringToStringListModel(user_dialog, text);
+
+  // Notify the user, if currently selected user does not correspond to the sender.
+  const auto selected = getCurrentlySelectedUser();
+  if (!selected || selected->first != id)
+  {
+    users_model_->setChecked(id, false);
+  }
 }
 
 void MessengerAppWidget::enterMainWidget()
