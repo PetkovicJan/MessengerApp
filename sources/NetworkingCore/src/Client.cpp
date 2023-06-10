@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-Client::Client(std::string const& ip_str, std::string const& port_str)
+Client::Client(const char* ip_str, const char* port_str)
 {
   server_ = std::make_unique<ConnectedSocket>(
     Address(SocketType::Client, ip_str, port_str));

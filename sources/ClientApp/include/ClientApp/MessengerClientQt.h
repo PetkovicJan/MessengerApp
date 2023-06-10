@@ -10,7 +10,7 @@ class MessengerClientQt : public QObject, public MessengerClient
 
 public:
   explicit MessengerClientQt(
-    std::string const& ip_str, std::string const& port_str, 
+    const char* ip_str, const char* port_str, 
     QObject* parent = nullptr);
 
 signals:

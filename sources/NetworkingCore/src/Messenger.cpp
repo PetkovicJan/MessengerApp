@@ -5,7 +5,7 @@
 #define ADD_DEFAULT_USERS
 
 MessengerServer::MessengerServer(
-  std::string const& ip_str, std::string const& port_str, int max_num_clients) :
+  const char* ip_str, const char* port_str, int max_num_clients) :
   Server(ip_str, port_str, max_num_clients), users_db_("users.db")
 {
 #ifdef ADD_DEFAULT_USERS
@@ -159,7 +159,7 @@ void MessengerServer::sendMessageToAllUsers(json const& msg, std::optional<int> 
 }
 
 MessengerClient::MessengerClient(
-  std::string const& ip_str, std::string const& port_str) :
+  const char* ip_str, const char* port_str) :
   Client(ip_str, port_str)
 {}
 

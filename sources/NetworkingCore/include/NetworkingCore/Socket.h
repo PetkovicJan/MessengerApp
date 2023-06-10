@@ -20,7 +20,7 @@ public:
 class Address
 {
 public:
-  explicit Address(SocketType type, std::string const& ip_str, std::string const& port_str);
+  explicit Address(SocketType type, const char* ip_str, const char* port_str);
 
   ~Address();
 

@@ -1,10 +1,18 @@
 #include <NetworkingCore/Server.h>
 #include <NetworkingCore/Messenger.h>
 
+#define LOOPBACK
+
 int main(int argc, char* argv[])
 {
-  // This machine's IP.
-  auto const ip_str = "127.0.0.1";
+#ifdef LOOPBACK
+  const char* ip_str = "127.0.0.1";
+#else
+  // From Windows docs: "if the IP string is an emtpy string, a registered address 
+  // on the local computer is returned", which is exactly what we want for the 
+  // server.
+  const char* ip_str = NULL;
+#endif
 
   // Port number from MS documentation.
   auto const port_num_str = "27015";

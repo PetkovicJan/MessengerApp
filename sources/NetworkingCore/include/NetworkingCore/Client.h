@@ -9,7 +9,7 @@ class Client
 {
 public:
   explicit Client(
-    std::string const& ip_str, std::string const& port_str);
+    const char* ip_str, const char* port_str);
   virtual ~Client();
 
   void exec();

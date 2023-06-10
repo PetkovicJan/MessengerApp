@@ -3,7 +3,7 @@
 #include <iostream>
 
 MessengerClientQt::MessengerClientQt(
-  std::string const& ip_str, std::string const& port_str, QObject* parent) : 
+  const char* ip_str, const char* port_str, QObject* parent) : 
   QObject(parent), MessengerClient(ip_str, port_str) 
 {
 }

@@ -28,7 +28,7 @@ class MessengerServer : public Server
 {
 public:
   explicit MessengerServer(
-    std::string const& ip_str, std::string const& port_str, int max_num_clients);
+    const char* ip_str, const char* port_str, int max_num_clients);
 
 private:
   void onClientConnected(int client_id) override;
@@ -48,7 +48,7 @@ class MessengerClient : public Client
 {
 public:
   explicit MessengerClient(
-    std::string const& ip_str, std::string const& port_str);
+    const char* ip_str, const char* port_str);
 
   void sendMessage(json const& msg);
 

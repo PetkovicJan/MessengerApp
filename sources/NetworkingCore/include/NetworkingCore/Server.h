@@ -14,7 +14,7 @@ class Server
 {
 public:
   explicit Server(
-    std::string const& ip_str, std::string const& port_str, int max_num_clients);
+    const char* ip_str, const char* port_str, int max_num_clients);
   virtual ~Server();
 
   void exec();

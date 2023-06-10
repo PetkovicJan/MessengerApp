@@ -8,13 +8,19 @@
 
 //#define DEBUG
 
+#define LOOPBACK
+
 int main(int argc, char* argv[]) {
 
   qRegisterMetaType<LoginStatus>("LoginStatus");
   qRegisterMetaType<CreateStatus>("ProcessHandle");
 
-  // This machine's IP.
-  auto const ip_str = "127.0.0.1";
+#ifdef LOOPBACK
+  const char* ip_str = "127.0.0.1";
+#else
+  // Here goes the IP address of the server.
+  const char* ip_str = "";
+#endif
 
   // Port number from MS documentation.
   auto const port_num_str = "27015";

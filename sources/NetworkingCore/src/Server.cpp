@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-Server::Server(std::string const& ip_str, std::string const& port_str, int max_num_clients) :
+Server::Server(const char* ip_str, const char* port_str, int max_num_clients) :
   listening_socket_(Address(SocketType::Server, ip_str, port_str), max_num_clients),
   max_clients_(max_num_clients)
 {

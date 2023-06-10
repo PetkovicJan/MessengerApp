@@ -14,7 +14,7 @@ SocketContext::~SocketContext()
   WSACleanup();
 }
 
-Address::Address(SocketType type, std::string const& ip_str, std::string const& port_str)
+Address::Address(SocketType type, const char* ip_str, const char* port_str)
 {
   addrinfo host_info;
   ZeroMemory(&host_info, sizeof(host_info));
@@ -24,7 +24,7 @@ Address::Address(SocketType type, std::string const& ip_str, std::string const& 
   if (type == SocketType::Server)
     host_info.ai_flags = AI_PASSIVE;
 
-  if (getaddrinfo(NULL, port_str.c_str(), &host_info, &address_info_) != 0)
+  if (getaddrinfo(ip_str, port_str, &host_info, &address_info_) != 0)
   {
     throw std::runtime_error("Get address info failed.");
   }
