@@ -61,30 +61,37 @@ std::optional<UserData> UsersDB::getUser(std::string const& name)
 
   auto callback = [](void* user_ptr, int column_count, char** column_strings, char** column_names)
   {
-    // The first argument server for passing additional data into the callback function.
-    // In this case, this is the user data struct instance.
-    auto user = reinterpret_cast<UserData*>(user_ptr);
-
+    // Fill the user structure with data, obtained from the query.
+    UserData queried_user;
     for (int i = 0; i < column_count; ++i)
     {
       if (column_names[i] == std::string("username"))
-        user->name = column_strings[i];
+        queried_user.name = column_strings[i];
       else if (column_names[i] == std::string("password"))
-        user->password = column_strings[i];
+        queried_user.password = column_strings[i];
     }
+
+    // The first argument serves for passing additional data into the callback function.
+    // In this case we use it to pass the (optional) user data struct instance.
+    auto user = reinterpret_cast<std::optional<UserData>*>(user_ptr);
+
+    // Set the result to the "out" value.
+    *user = queried_user;
 
     return SQLITE_OK;
   };
 
   // Execute the select statement. Pass additional user data, that is subsequently passed to callback.
-  UserData user;
+  std::optional<UserData> user;
   if (sqlite3_exec(db_, select_user_sql.c_str(), callback, &user, nullptr) != SQLITE_OK)
   {
     std::cout << "Failed to retrieve user: " << sqlite3_errmsg(db_) << '\n';
     return std::nullopt;
   }
 
-  std::cout << "User retrieved successfully\n";
-
+  // In case that there is no corresponding user in the database with that name, the SQL statement still 
+  // returns an OK status, since it is not an error, if the user is missing. But in that case, the callback
+  // won't be invoked and the user will be nullopt, so the behavior is correct. Note that we could use 
+  // fine-grained SQL methods to determine this directly, but there is no need to do that.
   return user;
 }
