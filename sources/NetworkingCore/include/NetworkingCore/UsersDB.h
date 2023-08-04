@@ -8,7 +8,7 @@
 struct UserData
 {
   std::string name;
-  std::string password;
+  std::string password_hash;
 };
 
 class UsersDB

@@ -42,7 +42,7 @@ bool UsersDB::addUser(UserData const& user)
 
   // SQL statement to insert values under username and password column in the users table.
   std::string insert_user_sql = "INSERT INTO users (username, password) VALUES ('" +
-    std::string(user.name) + "', '" + std::string(user.password) + "');";
+    std::string(user.name) + "', '" + std::string(user.password_hash) + "');";
 
   if (sqlite3_exec(db_, insert_user_sql.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK)
   {
@@ -68,7 +68,7 @@ std::optional<UserData> UsersDB::getUser(std::string const& name)
       if (column_names[i] == std::string("username"))
         queried_user.name = column_strings[i];
       else if (column_names[i] == std::string("password"))
-        queried_user.password = column_strings[i];
+        queried_user.password_hash = column_strings[i];
     }
 
     // The first argument serves for passing additional data into the callback function.

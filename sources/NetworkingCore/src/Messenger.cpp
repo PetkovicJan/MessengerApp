@@ -1,17 +1,30 @@
 #include <NetworkingCore/Messenger.h>
 
+#include <picosha2.h>
+
 #include <iostream>
 
 #define ADD_DEFAULT_USERS
+
+namespace detail
+{
+  std::string get_hash(std::string const& str)
+  {
+    std::string str_hash(picosha2::k_digest_size, '*');
+    picosha2::hash256(str, str_hash);
+
+    return str_hash;
+  }
+}
 
 MessengerServer::MessengerServer(
   const char* ip_str, const char* port_str, int max_num_clients) :
   Server(ip_str, port_str, max_num_clients), users_db_("users.db")
 {
 #ifdef ADD_DEFAULT_USERS
-  users_db_.addUser({ "user1", "abc123" });
-  users_db_.addUser({ "user2", "def456" });
-  users_db_.addUser({ "user3", "ghi789" });
+  users_db_.addUser({ "user1", detail::get_hash("abc123") });
+  users_db_.addUser({ "user2", detail::get_hash("def456") });
+  users_db_.addUser({ "user3", detail::get_hash("ghi789") });
 #endif
 }
 
@@ -55,22 +68,17 @@ void MessengerServer::onClientMessageReceived(
     const auto username = app_msg["username"].get<std::string>();
     const auto password = app_msg["password"].get<std::string>();
 
+    // Password hash needs to be stored instead of password.
+    const auto password_hash = detail::get_hash(password);
+
     // Add user to database.
-    UserData user{ username, password };
-    if (users_db_.addUser(user))
-    {
-      json user_created_msg;
-      user_created_msg["type"] = AppMessageType::UserCreatedStatus;
-      user_created_msg["status"] = CreateStatus::Success;
-      sendMessageToClient(client_id, user_created_msg.dump());
-    }
-    else
-    {
-      json user_created_msg;
-      user_created_msg["type"] = AppMessageType::UserCreatedStatus;
-      user_created_msg["status"] = CreateStatus::Failure;
-      sendMessageToClient(client_id, user_created_msg.dump());
-    }
+    UserData user{ username, password_hash };
+    const auto success = users_db_.addUser(user);
+
+    json user_created_msg;
+    user_created_msg["type"] = AppMessageType::UserCreatedStatus;
+    user_created_msg["status"] = success ? CreateStatus::Success : CreateStatus::Failure;
+    sendMessageToClient(client_id, user_created_msg.dump());
   }
   else if (msg_type == AppMessageType::UserLoggedIn)
   {
@@ -88,7 +96,9 @@ void MessengerServer::onClientMessageReceived(
       return;
     }
 
-    if (user->password != password)
+    // Get password hash to compare with the stored one.
+    const auto password_hash = detail::get_hash(password);
+    if (user->password_hash != password_hash)
     {
       json login_msg;
       login_msg["type"] = AppMessageType::UserLoginStatus;

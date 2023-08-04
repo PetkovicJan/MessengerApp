@@ -18,7 +18,9 @@ set(JSON_Install OFF CACHE INTERNAL "")
 add_subdirectory(${PROJECT_SOURCE_DIR}/ext/json)
 add_subdirectory(${PROJECT_SOURCE_DIR}/ext/sqlite)
 add_subdirectory(${PROJECT_SOURCE_DIR}/ext/googletest)
+add_subdirectory(${PROJECT_SOURCE_DIR}/ext/PicoSHA2)
 
+# Add main modules.
 add_subdirectory(${PROJECT_SOURCE_DIR}/sources/NetworkingCore)
 add_subdirectory(${PROJECT_SOURCE_DIR}/sources/ServerApp)
 add_subdirectory(${PROJECT_SOURCE_DIR}/sources/ClientApp)
