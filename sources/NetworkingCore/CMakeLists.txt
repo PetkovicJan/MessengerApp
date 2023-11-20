@@ -7,7 +7,9 @@ set(HPP_FILES
   ${HPP_DIR}/Client.h
   ${HPP_DIR}/Connection.h
   ${HPP_DIR}/Message.h
-  ${HPP_DIR}/Messenger.h
+  ${HPP_DIR}/MessengerDefines.h
+  ${HPP_DIR}/MessengerServer.h
+  ${HPP_DIR}/MessengerClient.h
   ${HPP_DIR}/Server.h
   ${HPP_DIR}/Socket.h
   ${HPP_DIR}/ThreadSafeQueue.h
@@ -18,7 +20,8 @@ set(CPP_DIR ${PROJECT_SOURCE_DIR}/src)
 set(CPP_FILES 
   ${CPP_DIR}/Client.cpp
   ${CPP_DIR}/Connection.cpp
-  ${CPP_DIR}/Messenger.cpp
+  ${CPP_DIR}/MessengerServer.cpp
+  ${CPP_DIR}/MessengerClient.cpp
   ${CPP_DIR}/Server.cpp
   ${CPP_DIR}/Socket.cpp
   ${CPP_DIR}/UsersDB.cpp)

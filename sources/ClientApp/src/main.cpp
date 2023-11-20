@@ -5,6 +5,7 @@
 #include <ClientApp/MessengerClientQt.h>
 
 #include <iostream>
+#include <thread>
 
 //#define DEBUG
 

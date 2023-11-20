@@ -1,6 +1,6 @@
 #pragma once
 
-#include <NetworkingCore/Messenger.h>
+#include <NetworkingCore/MessengerClient.h>
 
 #include <QObject>
 

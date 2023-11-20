@@ -18,7 +18,7 @@ Address::Address(SocketType type, const char* ip_str, const char* port_str)
 {
   addrinfo host_info;
   ZeroMemory(&host_info, sizeof(host_info));
-  host_info.ai_family = AF_UNSPEC;
+  host_info.ai_family = AF_INET;
   host_info.ai_socktype = SOCK_STREAM;
   host_info.ai_protocol = IPPROTO_TCP;
   if (type == SocketType::Server)
