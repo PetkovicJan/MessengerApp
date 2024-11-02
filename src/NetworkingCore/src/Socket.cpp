@@ -1,6 +1,8 @@
 #include <NetworkingCore/Socket.h>
 
 #include <stdexcept>
+#include <cstdint>
+#include <format>
 
 SocketContext::SocketContext()
 {
@@ -89,79 +91,71 @@ bool BareSocket::isValid() const
   return socket_ != INVALID_SOCKET;
 }
 
-std::string MessageBuilder::prefix_with_length(std::string const& data)
+std::string MessageBuilder::prefixWithLength(std::string const& msg)
 {
-  int32_t len = data.size();
+  MsgSizeT const msgSize = msg.size();
 
-  // Create copy of the string with prefixed length.
   std::string prefixed;
-  prefixed.resize(len + 4);
-  // Copy the string.
-  data.copy(prefixed.data() + 4, len);
-  // Prefix with length.
-  // First 4 bytes must correspond to the length of the message.
-  std::memcpy(prefixed.data(), &len, 4);
+  prefixed.resize(msgSize + SizeByteCount);
+
+  std::memcpy(prefixed.data(), &msgSize, SizeByteCount);
+  std::memcpy(prefixed.data() + SizeByteCount, msg.data(), msgSize);
 
   return prefixed;
 }
 
-std::vector<std::string> MessageBuilder::build(std::string const& data)
+std::vector<std::string> MessageBuilder::build(std::string const& currentMsg)
 {
-  auto msg_begin = data.begin();
+  auto currentMsgBegin = currentMsg.begin();
 
-  if (!msg_started_)
-  {
-    // This is a must! If this data is supposed to start a new message,
-    // it must be at least 4 bytes long, so that we obtain the message
-    // size in full. This is only true in current implementation.
-    if (data.size() < 4)
-      throw std::runtime_error("Received data for new message must be at least 4 bytes long.");
+  if (!m_isMsgProcessed) {
+    // Start processing new message. In current implementation we require 
+    // that the obtained data contains at least the message size.
+    if (currentMsg.size() < SizeByteCount) {
+      throw std::runtime_error(std::format(
+        "Received data for new message must be at least {} bytes long.", SizeByteCount));
+    }
 
-    // First 4 bytes must correspond to the length of the message.
-    std::memcpy(&msg_sz_, data.data(), 4);
+    // First bytes correspond to size of the message.
+    std::memcpy(&m_processedMsgSz, currentMsg.data(), SizeByteCount);
 
-    msg_begin += 4;
-
-    msg_started_ = true;
+    currentMsgBegin += 4;
+    m_isMsgProcessed = true;
   }
 
-  const auto msg_sz = data.end() - msg_begin;
-  const auto curr_sz = msg_.size();
+  auto const currentMsgSize = currentMsg.end() - currentMsgBegin;
+  auto const requiredSizeToComplete = m_processedMsgSz - m_processedMsg.size();
+  if (requiredSizeToComplete > currentMsgSize) {
+    // There is not enough data to complete the currently processed message. 
+    // Just append the current data and return empty result.
+    m_processedMsg.append(currentMsgBegin, currentMsg.end());
 
-  const auto sz_missing = msg_sz_ - curr_sz;
-  if (sz_missing > msg_sz)
-  {
-    // There is not enough data to complete the message. Just append the current data and return nullopt.
-    msg_.append(msg_begin, data.end());
     return {};
-  }
-  else
-  {
-    // Create complete message.
-    const auto curr_msg_end = msg_begin + sz_missing;
-    auto complete_msg = msg_;
-    complete_msg.append(msg_begin, curr_msg_end);
+  } else {
+    // Complete currently processed message.
+    const auto processedMsgEnd = currentMsgBegin + requiredSizeToComplete;
 
-    // Reset all the members.
-    msg_started_ = false;
-    msg_sz_ = 0;
-    msg_.clear();
+    auto completeMsg = m_processedMsg;
+    completeMsg.append(currentMsgBegin, processedMsgEnd);
+
+    // Reset the builder.
+    m_isMsgProcessed = false;
+    m_processedMsgSz = 0;
+    m_processedMsg.clear();
 
     // If we used up all the data, then just return the result.
-    if (curr_msg_end == data.end())
-    {
-      return { complete_msg };
+    if (processedMsgEnd == currentMsg.end()) {
+      return { completeMsg };
     }
     
     // Recursively call this function on the remaining data.
-    std::string remaining_data;
-    remaining_data.append(curr_msg_end, data.end());
-    auto all_msgs = build(remaining_data);
+    std::string remainingMsg(processedMsgEnd, currentMsg.end());
+    auto remainingMsgs = build(remainingMsg);
 
     // Insert the first message at the begining to preserve the order.
-    all_msgs.insert(all_msgs.begin(), complete_msg);
+    remainingMsgs.insert(remainingMsgs.begin(), completeMsg);
 
-    return all_msgs;
+    return remainingMsgs;
   }
 }
 
@@ -192,7 +186,7 @@ ConnectedSocket::~ConnectedSocket()
 
 void ConnectedSocket::send(std::string const& data) const
 {
-  const auto prefixed = MessageBuilder::prefix_with_length(data);
+  const auto prefixed = MessageBuilder::prefixWithLength(data);
   const int num_bytes = prefixed.size();
   const int result = ::send(socket_.handle(), prefixed.data(), num_bytes, 0);
   if (result == SOCKET_ERROR)

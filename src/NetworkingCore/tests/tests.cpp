@@ -2,119 +2,108 @@
 
 #include <NetworkingCore/Socket.h>
 
-TEST(MessageBuilderTest, HandlesOneCompleteMessage) 
+TEST(MessageBuilderTest, HandlesMessage) 
 {
-  // First create a message prefixed with length.
-  const std::string message = "Hello World!";
-  const auto prefixed = MessageBuilder::prefix_with_length(message);
+  // First create a message prefixed with length. They are expected to be sent in this form.
+  std::string const prefixed = MessageBuilder::prefixWithLength("Hello World!");
 
   // Build a message with builder.
   MessageBuilder builder;
-  const auto messages = builder.build(prefixed);
+  auto const messages = builder.build(prefixed);
 
   // We expect one message, equal to the original one.
   ASSERT_EQ(messages.size(), 1);
-  EXPECT_EQ(messages.at(0), message);
+  EXPECT_EQ(messages[0], "Hello World!");
 }
 
-TEST(MessageBuilderTest, HandlesMultipleCompleteMessagesOneByOne) 
+TEST(MessageBuilderTest, HandlesMultipleMessagesSeparately) 
 {
-  const std::vector<std::string> messages = { "Hello World!", "Foo Bar", "Random string."};
+  std::vector<std::string> const messages = { "Hello World!", "Foo Bar", "Random string."};
 
-  // Create message builder.
   MessageBuilder builder;
 
-  for (const auto msg : messages)
-  {
-    // Create message with length prefix.
-    const auto prefixed = MessageBuilder::prefix_with_length(msg);
-
-    // Build message with builder.
-    const auto built_messages = builder.build(prefixed);
+  for (auto const& msg : messages) {
+    std::string const prefixed = MessageBuilder::prefixWithLength(msg);
+    auto const messages = builder.build(prefixed);
 
     // We expect one message, equal to the original one.
-    ASSERT_EQ(built_messages.size(), 1);
-    EXPECT_EQ(built_messages.at(0), msg);
+    ASSERT_EQ(messages.size(), 1);
+    EXPECT_EQ(messages[0], msg);
   }
 }
 
-TEST(MessageBuilderTest, HandlesMultipleCompleteMessagesAllAtOnce) 
+TEST(MessageBuilderTest, HandlesMultipleMessagesAtOnce) 
 {
-  // Create one chunk of data from multiple messages.
-  const std::vector<std::string> messages = { "Hello World!", "Foo Bar" };
+  std::vector<std::string> const messages = { "Hello World!", "Foo Bar" };
 
-  std::string prefixed_data;
-  for (const auto& msg : messages)
-  {
-    auto prefixed = MessageBuilder::prefix_with_length(msg);
-    prefixed_data.append(prefixed);
+  // Create one chunk of data from multiple messages.
+  std::string joinedData;
+  for (auto const& msg : messages) {
+    std::string const prefixed = MessageBuilder::prefixWithLength(msg);
+    joinedData.append(prefixed);
   }
 
-  // Build messages with builder.
   MessageBuilder builder;
-  const auto final_messages = builder.build(prefixed_data);
+  const auto result = builder.build(joinedData);
 
   // We expect all original messages, each equal to the original one in the same order.
-  ASSERT_EQ(messages.size(), final_messages.size());
-  int i = 0;
-  for (const auto& msg : messages)
-  {
-    EXPECT_EQ(msg, final_messages.at(i));
-    ++i;
+  ASSERT_EQ(messages.size(), result.size());
+
+  for(std::size_t i = 0; i < messages.size(); ++i) {
+    EXPECT_EQ(messages[i], result[i]);
   }
 }
 
-TEST(MessageBuilderTest, HandlesOneMessageInTwoParts) 
+TEST(MessageBuilderTest, HandlesMessageInTwoParts) 
 {
-  // First create a message prefixed with length.
-  const std::string message = "Hello World!";
-  const auto prefixed = MessageBuilder::prefix_with_length(message);
+  std::string const message = "Hello World!";
+  std::string const prefixed = MessageBuilder::prefixWithLength(message);
 
   // Break message into two parts.
-  const int break_point = prefixed.size() / 2;
-  const auto first_part = prefixed.substr(0, break_point);
-  const auto second_part = prefixed.substr(break_point, prefixed.size() - break_point);
-  ASSERT_EQ(prefixed, first_part + second_part);
+  int const breakPoint = prefixed.size() / 2;
+  std::string const firstPart = prefixed.substr(0, breakPoint);
+  std::string const second_part = prefixed.substr(breakPoint, prefixed.size() - breakPoint);
+  ASSERT_EQ(prefixed, firstPart + second_part);
 
   // Create a builder. Build message in two parts.
   MessageBuilder builder;
   
-  // Build first part. We expect that result is an empty vector of messages, since no message could be built.
-  const auto result_1 = builder.build(first_part);
-  EXPECT_EQ(result_1.size(), 0);
+  // Build first part. We expect that result is an empty vector of messages, 
+  // since no message could be built from partial data.
+  auto const result1 = builder.build(firstPart);
+  EXPECT_EQ(result1.size(), 0);
   
   // Build second part. We expect one message that equals the original message.
-  const auto result_2 = builder.build(second_part);
-  ASSERT_EQ(result_2.size(), 1);
-  EXPECT_EQ(result_2.at(0), message);
+  auto const result2 = builder.build(second_part);
+  ASSERT_EQ(result2.size(), 1);
+  EXPECT_EQ(result2[0], message);
 }
 
-TEST(MessageBuilderTest, HandlesOneMessageInMoreParts) 
+TEST(MessageBuilderTest, HandlesMessageInMoreParts) 
 {
-  // First create a message prefixed with length.
-  const std::string message = "This is a random string: !#$%?";
-  const auto prefixed = MessageBuilder::prefix_with_length(message);
+  std::string const message = "This is a random string: !#$%?";
+  std::string const prefixed = MessageBuilder::prefixWithLength(message);
 
-  const std::vector<int> break_points = { 7, 14, 15, 24, 28 };
+  std::vector<std::size_t> const breakPoints = { 7, 14, 15, 24, 28 };
 
   // Create a builder. Build message in more parts.
   MessageBuilder builder;
-  for (int i = 0; i <= break_points.size(); ++i)
-  {
-    const auto start = i == 0 ? 0 : break_points.at(i - 1);
-    const auto end = i == break_points.size() ? prefixed.size() : break_points.at(i);
-    const auto part = prefixed.substr(start, end - start);
 
-    const auto result = builder.build(part);
-    if (i == break_points.size())
-    {
-      // This is the last part. We expect the message to be reconstructed.
+  for (std::size_t i = 0; i <= breakPoints.size(); ++i) {
+    std::size_t const begin = i == 0 ? 0 : breakPoints.at(i - 1);
+    std::size_t const end = i == breakPoints.size() ? prefixed.size() : breakPoints.at(i);
+    std::string const partialMsg = prefixed.substr(begin, end - begin);
+
+    auto const result = builder.build(partialMsg);
+
+    bool const isFinalPart = i == breakPoints.size();
+    if (isFinalPart) {
+      // This was the last part of the message. We expect the message to be reconstructed.
       ASSERT_EQ(result.size(), 1);
-      EXPECT_EQ(result.at(0), message);
+      EXPECT_EQ(result[0], message);
     }
-    else
-    {
-      // We are not at the end. We expect no message to be reconstructed at this point.
+    else {
+      // This was not the last part of the message. It should not be reconstructed at this point.
       EXPECT_EQ(result.size(), 0);
     }
   }
