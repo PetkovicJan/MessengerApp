@@ -100,7 +100,7 @@ void MessengerServer::onClientMessageReceived(
 
     // Get password hash to compare with the stored one.
     const auto password_hash = detail::get_hash(password);
-    if (user->password_hash != password_hash)
+    if (user->passwordHash != password_hash)
     {
       json login_msg;
       login_msg["type"] = AppMessageType::UserLoginStatus;

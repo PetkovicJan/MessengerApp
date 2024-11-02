@@ -8,19 +8,19 @@
 struct UserData
 {
   std::string name;
-  std::string password_hash;
+  std::string passwordHash;
 };
 
 class UsersDatabase
 {
 public:
-  explicit UsersDatabase(std::string const& db_name);
+  explicit UsersDatabase(std::string const& databaseName);
   ~UsersDatabase();
 
-  bool addUser(UserData const& user);
+  bool addUser(UserData const& userData);
 
-  std::optional<UserData> getUser(std::string const& name);
+  std::optional<UserData> getUser(std::string const& userName);
 
 private:
-  sqlite3* db_ = nullptr;
+  sqlite3* m_database = nullptr;
 };
