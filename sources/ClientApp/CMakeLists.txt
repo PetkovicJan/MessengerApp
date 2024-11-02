@@ -1,7 +1,7 @@
 # Set the project name.
 project(ClientApp)
 
-find_package(Qt5 COMPONENTS REQUIRED Core Widgets)
+find_package(Qt6 COMPONENTS REQUIRED Core Widgets)
 
 # Set header files.
 set(HPP_DIR ${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME})
@@ -27,7 +27,7 @@ add_executable(${PROJECT_NAME} ${CPP_FILES} ${HPP_FILES})
 target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 # Link libraries.
-set(LIBRARIES NetworkingCore Qt5::Widgets Qt5::Core)
+set(LIBRARIES NetworkingCore Qt6::Widgets Qt6::Core)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRARIES})
 
 # Configure Qt moc.
