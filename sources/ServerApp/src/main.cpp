@@ -1,5 +1,4 @@
-#include <NetworkingCore/Server.h>
-#include <NetworkingCore/Messenger.h>
+#include <NetworkingCore/MessengerServer.h>
 
 #define LOOPBACK
 
