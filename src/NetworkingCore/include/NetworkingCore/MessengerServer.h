@@ -3,7 +3,7 @@
 #include <NetworkingCore/Server.h>
 
 #include <NetworkingCore/MessengerDefines.h>
-#include <NetworkingCore/UsersDB.h>
+#include <NetworkingCore/UsersDatabase.h>
 
 #include <nlohmann/json.hpp>
 
@@ -30,5 +30,5 @@ private:
   std::vector<User> current_users_;
 
   // Registered users database.
-  UsersDB users_db_;
+  UsersDatabase users_db_;
 };

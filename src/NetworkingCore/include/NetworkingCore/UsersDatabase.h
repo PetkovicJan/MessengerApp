@@ -11,11 +11,11 @@ struct UserData
   std::string password_hash;
 };
 
-class UsersDB
+class UsersDatabase
 {
 public:
-  explicit UsersDB(std::string const& db_name);
-  ~UsersDB();
+  explicit UsersDatabase(std::string const& db_name);
+  ~UsersDatabase();
 
   bool addUser(UserData const& user);
 

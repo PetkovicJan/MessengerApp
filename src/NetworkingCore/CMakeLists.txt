@@ -13,7 +13,7 @@ set(HPP_FILES
   ${HPP_DIR}/Server.h
   ${HPP_DIR}/Socket.h
   ${HPP_DIR}/ThreadSafeQueue.h
-  ${HPP_DIR}/UsersDB.h)
+  ${HPP_DIR}/UsersDatabase.h)
 
 # Set source files.
 set(CPP_DIR ${PROJECT_SOURCE_DIR}/src)
@@ -24,7 +24,7 @@ set(CPP_FILES
   ${CPP_DIR}/MessengerClient.cpp
   ${CPP_DIR}/Server.cpp
   ${CPP_DIR}/Socket.cpp
-  ${CPP_DIR}/UsersDB.cpp)
+  ${CPP_DIR}/UsersDatabase.cpp)
 
 # Add the executable.
 add_library(${PROJECT_NAME} STATIC ${CPP_FILES} ${HPP_FILES})

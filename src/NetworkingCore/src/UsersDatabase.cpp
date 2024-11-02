@@ -1,8 +1,8 @@
-#include <NetworkingCore/UsersDB.h>
+#include <NetworkingCore/UsersDatabase.h>
 
 #include <iostream>
 
-UsersDB::UsersDB(std::string const& db_name)
+UsersDatabase::UsersDatabase(std::string const& db_name)
 {
   if (sqlite3_open("users.db", &db_) != SQLITE_OK)
   {
@@ -29,12 +29,12 @@ UsersDB::UsersDB(std::string const& db_name)
   std::cout << "Table created successfully\n";
 }
 
-UsersDB::~UsersDB()
+UsersDatabase::~UsersDatabase()
 {
   if (db_) sqlite3_close(db_);
 }
 
-bool UsersDB::addUser(UserData const& user)
+bool UsersDatabase::addUser(UserData const& user)
 {
   // This is the shorter way of doing it with exec() wrapper, instead of using primitives.
   // Note that this version, while being shorter, is vulnerable to SQL injection attacks,
@@ -55,7 +55,7 @@ bool UsersDB::addUser(UserData const& user)
   return true;
 }
 
-std::optional<UserData> UsersDB::getUser(std::string const& name)
+std::optional<UserData> UsersDatabase::getUser(std::string const& name)
 {
   const auto select_user_sql = "SELECT username, password FROM users WHERE username = '" + name + "';";
 
