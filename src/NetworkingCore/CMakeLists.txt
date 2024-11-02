@@ -38,4 +38,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRARIES})
 
 # Add tests.
 add_executable(tests tests/tests.cpp)
+
 target_link_libraries(tests PRIVATE ${PROJECT_NAME} GTest::gtest_main)
+
+add_test(NAME MessengerCoreTest COMMAND tests)
