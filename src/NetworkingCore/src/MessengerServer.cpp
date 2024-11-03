@@ -3,169 +3,183 @@
 #include <picosha2.h>
 
 #include <iostream>
+#include <format>
+#include <algorithm>
+#include <ranges>
 
+// Useful for testing in order to avoid registering new users.
 #define ADD_DEFAULT_USERS
 
 using json = nlohmann::json;
 
 namespace detail
 {
-  std::string get_hash(std::string const& str)
+  std::string computeHash(std::string const& str)
   {
-    std::string str_hash(picosha2::k_digest_size, '*');
-    picosha2::hash256(str, str_hash);
+    std::string hash(picosha2::k_digest_size, ' ');
 
-    return str_hash;
+    picosha2::hash256(str, hash);
+
+    return hash;
   }
 }
 
 MessengerServer::MessengerServer(
-  const char* ip_str, const char* port_str, int max_num_clients) :
-  Server(ip_str, port_str, max_num_clients), users_db_("users.db")
+  const char* ipStr, const char* portStr, int maxNumClients) :
+  Server(ipStr, portStr, maxNumClients), m_UsersDatabase("users.db")
 {
 #ifdef ADD_DEFAULT_USERS
-  users_db_.addUser({ "user1", detail::get_hash("abc123") });
-  users_db_.addUser({ "user2", detail::get_hash("def456") });
-  users_db_.addUser({ "user3", detail::get_hash("ghi789") });
+  m_UsersDatabase.addUser({ "user1", detail::computeHash("abc123") });
+  m_UsersDatabase.addUser({ "user2", detail::computeHash("def456") });
+  m_UsersDatabase.addUser({ "user3", detail::computeHash("ghi789") });
 #endif
 }
 
-void MessengerServer::onClientConnected(int client_id)
+void MessengerServer::onClientConnected(int clientId)
 {
-  // At this point nothing needs to be done, since the client has only connected to the server, but has not yet logged in.
-  std::cout << "Server::onClientConnected: " << client_id << '\n';
+  // At this point nothing needs to be done, since the client has only 
+  // connected to the server, but has not yet logged in.
+  std::cout << std::format("Server::onClientConnected: {}\n", clientId);
 }
 
-void MessengerServer::onClientDisconnected(int client_id)
+void MessengerServer::onClientDisconnected(int clientId)
 {
-  std::cout << "Server::onClientDisconnected: " << client_id << '\n';
+  std::cout << std::format("Server::onClientDisconnected: {}\n", clientId);
 
-  // First remove the user from the local current users.
-  auto it = std::find_if(current_users_.begin(), current_users_.end(),
-    [client_id](User const& user)
-    {
-      return user.id == client_id;
-    });
+  auto userIt = std::ranges::find(m_loggedInUsers, clientId, &User::id);
+  if (userIt == m_loggedInUsers.end()) {
+    // User hasn't logged in yet, nothing to do.
+    return;
+  }
 
-  // Sanity check.
-  if (it != current_users_.end())
-    current_users_.erase(it);
+  m_loggedInUsers.erase(userIt);
 
-  // Finally, notify the rest of the users.
   json msg;
   msg["type"] = AppMessageType::UserLoggedOut;
-  msg["user_id"] = client_id;
-  sendMessageToAllUsers(msg, client_id);
+  msg["user_id"] = clientId;
+
+  sendMessageToAllUsers(msg, clientId);
 }
 
 void MessengerServer::onClientMessageReceived(
-  int client_id, std::string const& msg_str)
+  int clientId, std::string const& msgStr)
 {
-  const auto app_msg = json::parse(msg_str);
-  std::cout << "Server::onClientMessageReceived: " << app_msg << '\n';
+  auto const appMsg = json::parse(msgStr);
+  std::cout << std::format("Server::onClientMessageReceived: {}\n", appMsg.dump());
 
-  const auto msg_type = app_msg["type"].get<AppMessageType>();
-  if (msg_type == AppMessageType::UserCreated)
-  {
-    const auto username = app_msg["username"].get<std::string>();
-    const auto password = app_msg["password"].get<std::string>();
+  AppMessageType const msgType = appMsg["type"].get<AppMessageType>();
 
-    // Password hash needs to be stored instead of password.
-    const auto password_hash = detail::get_hash(password);
+  if (msgType == AppMessageType::UserCreated) {
+    std::string username = appMsg["username"].get<std::string>();
+    std::string password = appMsg["password"].get<std::string>();
 
-    // Add user to database.
-    UserData user{ username, password_hash };
-    const auto success = users_db_.addUser(user);
+    // Password hash is stored instead of password itself.
+    std::string passwordHash = detail::computeHash(password);
 
-    json user_created_msg;
-    user_created_msg["type"] = AppMessageType::UserCreatedStatus;
-    user_created_msg["status"] = success ? CreateStatus::Success : CreateStatus::Failure;
-    sendMessageToClient(client_id, user_created_msg.dump());
-  }
-  else if (msg_type == AppMessageType::UserLoggedIn)
-  {
-    const auto username = app_msg["username"].get<std::string>();
-    const auto password = app_msg["password"].get<std::string>();
+    UserData const userData{ 
+      .name = std::move(username),
+      .passwordHash = std::move(passwordHash),
+    };
 
-    // First authenticate the user.
-    const auto user = users_db_.getUser(username);
-    if (!user.has_value())
-    {
-      json login_msg;
-      login_msg["type"] = AppMessageType::UserLoginStatus;
-      login_msg["status"] = LoginStatus::InvalidUsername;
-      sendMessageToClient(client_id, login_msg.dump());
+    // Store user to database.
+    bool const storeSuccess = m_UsersDatabase.addUser(userData);
+
+    json userCreatedMsg;
+    userCreatedMsg["type"] = AppMessageType::UserCreatedStatus;
+    userCreatedMsg["status"] = storeSuccess ? CreateStatus::Success : CreateStatus::Failure;
+
+    sendMessageToClient(clientId, userCreatedMsg.dump());
+  } 
+  else if (msgType == AppMessageType::UserLoggedIn) {
+    std::string username = appMsg["username"].get<std::string>();
+    std::string password = appMsg["password"].get<std::string>();
+
+    // Fetch user from database.
+    std::optional<UserData> const user = m_UsersDatabase.getUser(username);
+
+    if (!user.has_value()) {
+      json loginMsg;
+      loginMsg["type"] = AppMessageType::UserLoginStatus;
+      loginMsg["status"] = LoginStatus::InvalidUsername;
+
+      sendMessageToClient(clientId, loginMsg.dump());
+
       return;
     }
 
-    // Get password hash to compare with the stored one.
-    const auto password_hash = detail::get_hash(password);
-    if (user->passwordHash != password_hash)
-    {
-      json login_msg;
-      login_msg["type"] = AppMessageType::UserLoginStatus;
-      login_msg["status"] = LoginStatus::InvalidPassword;
-      sendMessageToClient(client_id, login_msg.dump());
+    // Check password.
+    std::string const passwordHash = detail::computeHash(password);
+    if (user->passwordHash != passwordHash) {
+      json loginMsg;
+      loginMsg["type"] = AppMessageType::UserLoginStatus;
+      loginMsg["status"] = LoginStatus::InvalidPassword;
+
+      sendMessageToClient(clientId, loginMsg.dump());
+
       return;
     }
 
-    // Authentication succeeded, notify the user.
-    json login_msg;
-    login_msg["type"] = AppMessageType::UserLoginStatus;
-    login_msg["status"] = LoginStatus::Success;
-    sendMessageToClient(client_id, login_msg.dump());
+    // Authentication successful, notify the newly logged in user.
+    json loginMsg;
+    loginMsg["type"] = AppMessageType::UserLoginStatus;
+    loginMsg["status"] = LoginStatus::Success;
 
-    // Then notify the new user of all users, that are currently logged in.
-    for (const auto& user : current_users_)
-    {
-      // Create a logged in message.
-      json notify_msg;
-      notify_msg["type"] = AppMessageType::UserLoggedIn;
-      notify_msg["user_id"] = user.id;
-      notify_msg["username"] = user.name;
-      sendMessageToClient(client_id, notify_msg.dump());
+    sendMessageToClient(clientId, loginMsg.dump());
+
+    // Notify the newly logged in user of all users, that are already logged in.
+    for (const auto& user : m_loggedInUsers) {
+      json msg;
+      msg["type"] = AppMessageType::UserLoggedIn;
+      msg["user_id"] = user.id;
+      msg["username"] = user.name;
+
+      sendMessageToClient(clientId, msg.dump());
     }
 
-    // Update the current users.
-    current_users_.push_back({ client_id, username });
+    // Update the currently logged in users.
+    m_loggedInUsers.push_back({ clientId, username });
 
     // When the message comes from the client, it only contains its username, but *not the ID*, 
     // since it is implicit on the server side. However, when we send the notification message
     // to other clients, we need to add the ID, so they know which client logged in.
-    json new_msg;
-    new_msg["type"] = AppMessageType::UserLoggedIn;
-    new_msg["user_id"] = client_id;
-    new_msg["username"] = username;
 
-    // Finally, inform the other users about the new user.
-    sendMessageToAllUsers(new_msg, client_id);
+    // Notify users that are already logged in about the newly logged in user.
+    json newUserMsg;
+    newUserMsg["type"] = AppMessageType::UserLoggedIn;
+    newUserMsg["user_id"] = clientId;
+    newUserMsg["username"] = username;
+
+    sendMessageToAllUsers(newUserMsg, clientId);
   }
-  else if (msg_type == AppMessageType::UserSentMessage)
-  {
+  else if (msgType == AppMessageType::UserSentMessage) {
     // Obtain the receiving client ID and message.
-    const auto client_to = app_msg["user_id"].get<int>();
-    const auto msg = app_msg["message"].get<std::string>();
+    int const clientIdTo = appMsg["user_id"].get<int>();
+    std::string const msg = appMsg["message"].get<std::string>();
+
+    int const clientIdFrom = clientId;
 
     // Create a new message with the sender client ID and message.
-    const int client_from = client_id;
-    json new_msg; 
-    new_msg["type"] = AppMessageType::UserSentMessage;
-    new_msg["user_id"] = client_from;
-    new_msg["message"] = msg;
+    json newMsg; 
+    newMsg["type"] = AppMessageType::UserSentMessage;
+    newMsg["user_id"] = clientIdFrom;
+    newMsg["message"] = msg;
 
     // Send new message to the receiving client.
-    sendMessageToClient(client_to, new_msg.dump());
+    sendMessageToClient(clientIdTo, newMsg.dump());
   }
 }
 
-void MessengerServer::sendMessageToAllUsers(json const& msg, std::optional<int> opt_ignore_id)
+void MessengerServer::sendMessageToAllUsers(json const& msg, std::optional<int> ignoreId)
 {
-  const auto serialized_msg = msg.dump();
-  for (auto const& user : current_users_)
-  {
-    if (opt_ignore_id && *opt_ignore_id == user.id) 
-      continue;
+  std::string const serializedMsg = msg.dump();
 
-    sendMessageToClient(user.id, serialized_msg);
-  }
+  auto const sendMsg = [&](int userId) {
+    sendMessageToClient(userId, serializedMsg);
+  };
+
+  auto filteredUsers = m_loggedInUsers | std::views::filter([&](User const& user) {
+    return !(ignoreId && *ignoreId == user.id);
+  });
+
+  std::ranges::for_each(filteredUsers, sendMsg, &User::id);
 }
